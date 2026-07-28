@@ -2,7 +2,6 @@ import React from 'react';
 import { Platform, StyleSheet, View } from 'react-native';
 import { useColors } from '@/hooks/useColors';
 import { Feather } from '@expo/vector-icons';
-import { BlurView } from 'expo-blur';
 import { Tabs } from 'expo-router';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
@@ -28,21 +27,11 @@ export default function TabLayout() {
           paddingTop: 8,
           height: isIOS ? 60 + safeAreaInsets.bottom : 68,
         },
-        tabBarBackground: () =>
-          isIOS ? (
-            <BlurView
-              intensity={100}
-              tint="dark"
-              style={StyleSheet.absoluteFill}
-            />
-          ) : isWeb ? (
-            <View
-              style={[
-                StyleSheet.absoluteFill,
-                { backgroundColor: colors.background },
-              ]}
-            />
-          ) : null,
+        tabBarBackground: () => (
+          <View
+            style={[StyleSheet.absoluteFill, { backgroundColor: colors.background }]}
+          />
+        ),
       }}
     >
       <Tabs.Screen
