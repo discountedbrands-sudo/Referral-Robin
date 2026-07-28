@@ -1,0 +1,90 @@
+Referral-Robin
+Referral-Robin
+github.com/discountedbrands-sudo/Referral-Robin
+
+
+Start new build
+Build overview
+Click on the build steps for details.
+Preparing build machine
+26s
+Fetching app sources
+2s
+Install dependencies
+21s
+
+
+
+Show command
+! Corepack is about to download https://registry.npmjs.org/pnpm/-/pnpm-11.17.0.tgz
+Scope: all 9 workspace projects
+? Verifying lockfile against supply-chain policies (1190 entries)...
+Lockfile is up to date, resolution step is skipped
+Progress: resolved 1, reused 0, downloaded 0, added 0
+Packages: +1210
+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+Progress: resolved 1210, reused 0, downloaded 94, added 4
+Progress: resolved 1210, reused 0, downloaded 324, added 32
+Progress: resolved 1210, reused 0, downloaded 354, added 36
+Progress: resolved 1210, reused 0, downloaded 425, added 42
+Progress: resolved 1210, reused 0, downloaded 658, added 64
+Progress: resolved 1210, reused 0, downloaded 820, added 79
+Progress: resolved 1210, reused 0, downloaded 902, added 85
+Progress: resolved 1210, reused 0, downloaded 947, added 88
+Progress: resolved 1210, reused 0, downloaded 1013, added 94
+✓ Lockfile passes supply-chain policies (1190 entries in 9.4s)
+Progress: resolved 1210, reused 0, downloaded 1088, added 100
+Progress: resolved 1210, reused 0, downloaded 1169, added 105
+Progress: resolved 1210, reused 0, downloaded 1183, added 348
+Progress: resolved 1210, reused 0, downloaded 1183, added 430
+Progress: resolved 1210, reused 0, downloaded 1183, added 553
+Progress: resolved 1210, reused 0, downloaded 1183, added 651
+Progress: resolved 1210, reused 0, downloaded 1184, added 911
+Progress: resolved 1210, reused 0, downloaded 1184, added 1045
+Progress: resolved 1210, reused 0, downloaded 1184, added 1199
+Progress: resolved 1210, reused 0, downloaded 1184, added 1209
+Progress: resolved 1210, reused 0, downloaded 1184, added 1210, done
+
+dependencies:
++ @replit/connectors-sdk 0.4.1
+
+devDependencies:
++ prettier 3.9.6
++ typescript 5.9.3
+
+. preinstall$ sh -c 'rm -f package-lock.json yarn.lock; case "$npm_config_user_agent" in pnpm/*) ;; *) echo "Use pnpm instead" >&2; exit 1 ;; esac'
+. preinstall: Done
+[ERR_PNPM_IGNORED_BUILDS] Ignored build scripts: browser-tabs-lock@1.3.0, core-js@3.47.0, esbuild@0.27.3
+
+Run "pnpm approve-builds" to pick which dependencies should be allowed to run scripts.
+
+
+Build failed :|
+Step 2 script `Install dependencies` exited with status code 1
+Expo prebuild
+< 1s
+Build debug APK
+< 1s
+Publishing
+< 1s
+Cleaning up
+< 1s
+Step 2 script `Install dependencies` exited with status code 1
+
+TV
+Time Value
+Personal Account
+Personal Account
+TV
+Time Value
+Create new team
+Applications
+Builds
+OTA Updates
+App Preview
+Settings
+Billing
+
+
+Log out
+

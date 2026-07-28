@@ -19,7 +19,8 @@ workflows:
       - name: Install dependencies
         script: |
           export COREPACK_ENABLE_STRICT=0
-          pnpm install --frozen-lockfile
+          pnpm install --frozen-lockfile --ignore-scripts
+          pnpm rebuild esbuild
 
       - name: Expo prebuild
         working_directory: artifacts/referral-robin
@@ -61,7 +62,8 @@ workflows:
       - name: Install dependencies
         script: |
           export COREPACK_ENABLE_STRICT=0
-          pnpm install --frozen-lockfile
+          pnpm install --frozen-lockfile --ignore-scripts
+          pnpm rebuild esbuild
 
       - name: Expo prebuild
         working_directory: artifacts/referral-robin
