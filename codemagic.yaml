@@ -39,14 +39,6 @@ workflows:
     artifacts:
       - artifacts/referral-robin/android/app/build/outputs/apk/**/*.apk
 
-    publishing:
-      email:
-        recipients:
-          - $CM_EMAIL
-        notify:
-          success: true
-          failure: true
-
   # ─────────────────────────────────────────────────────────────
   # Production — signed AAB for the Play Store
   # ─────────────────────────────────────────────────────────────
@@ -94,9 +86,3 @@ workflows:
         credentials: $GCLOUD_SERVICE_ACCOUNT_CREDENTIALS   # JSON key, set in Codemagic env
         track: internal
         submit_as_draft: true
-      email:
-        recipients:
-          - $CM_EMAIL
-        notify:
-          success: true
-          failure: true
