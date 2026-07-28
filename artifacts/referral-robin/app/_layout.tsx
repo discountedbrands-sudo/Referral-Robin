@@ -22,8 +22,12 @@ SplashScreen.preventAutoHideAsync();
 
 const queryClient = new QueryClient();
 
+// EXPO_PUBLIC_API_URL is set in eas.json for EAS builds (points to deployed API).
+// EXPO_PUBLIC_DOMAIN is the Replit dev domain used in local dev.
+const apiUrl = process.env.EXPO_PUBLIC_API_URL;
 const domain = process.env.EXPO_PUBLIC_DOMAIN;
-if (domain) setBaseUrl(`https://${domain}`);
+if (apiUrl) setBaseUrl(apiUrl);
+else if (domain) setBaseUrl(`https://${domain}`);
 
 const publishableKey = process.env.EXPO_PUBLIC_CLERK_PUBLISHABLE_KEY!;
 const proxyUrl = process.env.EXPO_PUBLIC_CLERK_PROXY_URL || undefined;
