@@ -1,7 +1,0 @@
-{
-  "onlyBuiltDependencies": [
-    "browser-tabs-lock",
-    "core-js",
-    "esbuild"
-  ]
-}
