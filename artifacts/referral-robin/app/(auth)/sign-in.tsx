@@ -1,6 +1,6 @@
 import { useSignIn, useSSO } from '@clerk/expo';
-import { type Href, Link, useRouter } from 'expo-router';
-import React, { useCallback, useEffect } from 'react';
+import { Link, useRouter } from 'expo-router';
+import React, { useCallback, useEffect, useState } from 'react';
 import {
   Pressable,
   StyleSheet,
@@ -9,6 +9,7 @@ import {
   Text,
   Platform,
   ScrollView,
+  ActivityIndicator,
 } from 'react-native';
 import { useColors } from '@/hooks/useColors';
 import { MaterialCommunityIcons } from '@expo/vector-icons';
@@ -16,17 +17,6 @@ import * as WebBrowser from 'expo-web-browser';
 import * as AuthSession from 'expo-auth-session';
 
 WebBrowser.maybeCompleteAuthSession();
-
-function navigateAfterAuth(url: string, router: ReturnType<typeof useRouter>) {
-  if (url.startsWith('http')) {
-    // Web — Expo Router can't handle absolute URLs; use location directly
-    if (typeof window !== 'undefined') {
-      window.location.href = url;
-    }
-  } else {
-    router.replace(url as Href);
-  }
-}
 
 export default function SignInPage() {
   useEffect(() => {
@@ -36,58 +26,51 @@ export default function SignInPage() {
   }, []);
 
   const colors = useColors();
-  const { signIn, errors, fetchStatus, isLoaded } = useSignIn();
+  const { signIn, setActive, isLoaded } = useSignIn();
   const { startSSOFlow } = useSSO();
   const router = useRouter();
 
-  const [emailAddress, setEmailAddress] = React.useState('');
-  const [password, setPassword] = React.useState('');
+  const [emailAddress, setEmailAddress] = useState('');
+  const [password, setPassword] = useState('');
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState<string | null>(null);
 
   const handleSubmit = async () => {
-    if (!isLoaded) return;
-    const { error } = await signIn.password({ emailAddress, password });
-    if (error) return; // errors object updates automatically — shown in UI below
-
-    if (signIn.status === 'complete') {
-      await signIn.finalize({
-        navigate: ({ session, decorateUrl }) => {
-          if (session?.currentTask) return;
-          navigateAfterAuth(decorateUrl('/(home)/(tabs)/'), router);
-        },
+    if (!isLoaded || loading) return;
+    setLoading(true);
+    setError(null);
+    try {
+      const result = await signIn.create({
+        identifier: emailAddress,
+        password,
       });
+      if (result.status === 'complete') {
+        await setActive({ session: result.createdSessionId });
+        router.replace('/(home)/(tabs)/');
+      }
+    } catch (err: any) {
+      const msg = err?.errors?.[0]?.longMessage || err?.errors?.[0]?.message || 'Sign in failed';
+      setError(msg);
+    } finally {
+      setLoading(false);
     }
   };
 
   const handleGoogleSignIn = useCallback(async () => {
     try {
-      const { createdSessionId, setActive } = await startSSOFlow({
+      const { createdSessionId, setActive: activate } = await startSSOFlow({
         strategy: 'oauth_google',
         redirectUrl: AuthSession.makeRedirectUri(),
       });
-      if (createdSessionId && setActive) {
-        await setActive({
-          session: createdSessionId,
-          navigate: ({ session, decorateUrl }) => {
-            if (session?.currentTask) return;
-            navigateAfterAuth(decorateUrl('/(home)/(tabs)/'), router);
-          },
-        });
+      if (createdSessionId && activate) {
+        await activate({ session: createdSessionId });
+        router.replace('/(home)/(tabs)/');
       }
-    } catch (err) {
-      console.error(err);
+    } catch (err: any) {
+      const msg = err?.errors?.[0]?.longMessage || err?.errors?.[0]?.message || 'Google sign in failed';
+      setError(msg);
     }
   }, [startSSOFlow, router]);
-
-  // Flatten all Clerk field errors into a single message for display
-  const errorMessage = (() => {
-    if (!errors) return null;
-    const fieldErrors = Object.values(errors.fields ?? {})
-      .map((f: any) => f?.message)
-      .filter(Boolean);
-    if (fieldErrors.length > 0) return fieldErrors.join(' · ');
-    if ((errors as any).message) return (errors as any).message;
-    return null;
-  })();
 
   return (
     <ScrollView
@@ -105,21 +88,17 @@ export default function SignInPage() {
       </View>
 
       <View style={styles.form}>
-        {/* Error banner */}
-        {errorMessage ? (
+        {error ? (
           <View style={[styles.errorBanner, { backgroundColor: '#3D1515', borderColor: colors.destructive }]}>
             <MaterialCommunityIcons name="alert-circle-outline" size={16} color={colors.destructive} />
-            <Text style={[styles.errorText, { color: colors.destructive }]}>{errorMessage}</Text>
+            <Text style={[styles.errorText, { color: colors.destructive }]}>{error}</Text>
           </View>
         ) : null}
 
         <View style={styles.inputGroup}>
           <Text style={[styles.label, { color: colors.secondaryForeground }]}>Email</Text>
           <TextInput
-            style={[
-              styles.input,
-              { backgroundColor: colors.input, borderColor: errors?.fields?.emailAddress ? colors.destructive : colors.border, color: colors.foreground },
-            ]}
+            style={[styles.input, { backgroundColor: colors.input, borderColor: colors.border, color: colors.foreground }]}
             autoCapitalize="none"
             value={emailAddress}
             placeholder="name@example.com"
@@ -133,10 +112,7 @@ export default function SignInPage() {
         <View style={styles.inputGroup}>
           <Text style={[styles.label, { color: colors.secondaryForeground }]}>Password</Text>
           <TextInput
-            style={[
-              styles.input,
-              { backgroundColor: colors.input, borderColor: errors?.fields?.password ? colors.destructive : colors.border, color: colors.foreground },
-            ]}
+            style={[styles.input, { backgroundColor: colors.input, borderColor: colors.border, color: colors.foreground }]}
             value={password}
             placeholder="••••••••"
             placeholderTextColor={colors.mutedForeground}
@@ -150,15 +126,16 @@ export default function SignInPage() {
           style={({ pressed }) => [
             styles.button,
             { backgroundColor: colors.primary },
-            (!emailAddress || !password || fetchStatus === 'fetching') && { opacity: 0.5 },
+            (!emailAddress || !password || loading) && { opacity: 0.5 },
             pressed && { opacity: 0.8 },
           ]}
           onPress={handleSubmit}
-          disabled={!emailAddress || !password || fetchStatus === 'fetching'}
+          disabled={!emailAddress || !password || loading}
         >
-          <Text style={[styles.buttonText, { color: colors.primaryForeground }]}>
-            {fetchStatus === 'fetching' ? 'Signing in…' : 'Sign In'}
-          </Text>
+          {loading
+            ? <ActivityIndicator color={colors.primaryForeground} />
+            : <Text style={[styles.buttonText, { color: colors.primaryForeground }]}>Sign In</Text>
+          }
         </Pressable>
 
         <View style={styles.divider}>
