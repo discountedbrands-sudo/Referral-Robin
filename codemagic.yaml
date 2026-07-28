@@ -33,6 +33,12 @@ workflows:
             --clean \
             --no-install
 
+      - name: Patch build.gradle packaging
+        working_directory: artifacts/referral-robin
+        script: |
+          # Exclude duplicate META-INF file from okhttp3/jspecify JARs
+          sed -i 's/^android {/android {\n    packaging {\n        resources {\n            excludes += ["META-INF\/versions\/9\/OSGI-INF\/MANIFEST.MF"]\n        }\n    }/' android/app/build.gradle
+
       - name: Build debug APK
         working_directory: artifacts/referral-robin/android
         script: |
@@ -75,6 +81,11 @@ workflows:
             --platform android \
             --clean \
             --no-install
+
+      - name: Patch build.gradle packaging
+        working_directory: artifacts/referral-robin
+        script: |
+          sed -i 's/^android {/android {\n    packaging {\n        resources {\n            excludes += ["META-INF\/versions\/9\/OSGI-INF\/MANIFEST.MF"]\n        }\n    }/' android/app/build.gradle
 
       - name: Build release AAB
         working_directory: artifacts/referral-robin/android

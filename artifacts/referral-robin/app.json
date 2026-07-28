@@ -35,8 +35,7 @@
         }
       ],
       "expo-font",
-      "expo-web-browser",
-      "./plugins/withAndroidPackaging"
+      "expo-web-browser"
     ],
     "experiments": {
       "typedRoutes": true,
