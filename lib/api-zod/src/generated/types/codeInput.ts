@@ -10,4 +10,9 @@ export interface CodeInput {
   brandId: number;
   /** @minLength 1 */
   code: string;
+  /**
+     * Optional expiry date for this code (ISO 8601)
+     * @nullable
+     */
+  expiresAt?: Date | null;
 }

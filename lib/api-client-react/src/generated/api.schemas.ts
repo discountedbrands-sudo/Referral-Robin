@@ -48,6 +48,11 @@ export interface CodeInput {
   brandId: number;
   /** @minLength 1 */
   code: string;
+  /**
+     * Optional expiry date for this code (ISO 8601)
+     * @nullable
+     */
+  expiresAt?: string | null;
 }
 
 export interface ReportInput {
@@ -72,6 +77,8 @@ export interface UserCode {
   timesServed: number;
   timesCopied: number;
   createdAt: string;
+  /** @nullable */
+  expiresAt?: string | null;
 }
 
 export interface UserStats {

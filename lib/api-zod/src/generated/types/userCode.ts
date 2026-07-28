@@ -16,4 +16,6 @@ export interface UserCode {
   timesServed: number;
   timesCopied: number;
   createdAt: Date;
+  /** @nullable */
+  expiresAt?: Date | null;
 }

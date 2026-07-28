@@ -1,5 +1,5 @@
 import { db, codesTable, queueStateTable } from "@workspace/db";
-import { eq, and } from "drizzle-orm";
+import { eq, and, or, isNull, gt } from "drizzle-orm";
 
 /**
  * Weighted round-robin queue builder.
@@ -45,11 +45,17 @@ export function buildWeightedQueue(
  * Resets cursor to 0.
  */
 export async function rebuildQueue(brandId: number): Promise<void> {
+  const now = new Date();
   const activeCodes = await db
     .select({ id: codesTable.id, weight: codesTable.weight })
     .from(codesTable)
     .where(
-      and(eq(codesTable.brandId, brandId), eq(codesTable.status, "active")),
+      and(
+        eq(codesTable.brandId, brandId),
+        eq(codesTable.status, "active"),
+        // Exclude codes that have expired
+        or(isNull(codesTable.expiresAt), gt(codesTable.expiresAt, now)),
+      ),
     );
 
   const order = buildWeightedQueue(activeCodes);

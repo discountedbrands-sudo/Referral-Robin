@@ -172,7 +172,7 @@ router.post(
       return;
     }
 
-    const { brandId, code } = parsed.data;
+    const { brandId, code, expiresAt } = parsed.data;
     const userId = req.userId!;
 
     const [brand] = await db
@@ -187,7 +187,7 @@ router.post(
 
     const [newCode] = await db
       .insert(codesTable)
-      .values({ brandId, code, ownerId: userId, status: "active", weight: 1, tier: "free" })
+      .values({ brandId, code, ownerId: userId, status: "active", weight: 1, tier: "free", expiresAt: expiresAt ? new Date(expiresAt) : null })
       .returning();
 
     // Rebuild queue to include the new code
@@ -202,6 +202,7 @@ router.post(
       timesServed: newCode.timesServed,
       timesCopied: newCode.timesCopied,
       createdAt: newCode.createdAt,
+      expiresAt: newCode.expiresAt ?? null,
     });
   },
 );

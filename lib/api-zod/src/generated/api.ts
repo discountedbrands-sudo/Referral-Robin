@@ -97,7 +97,8 @@ export const ConfirmCopyResponse = zod.object({
 
 export const SubmitCodeBody = zod.object({
   "brandId": zod.number(),
-  "code": zod.string().min(1)
+  "code": zod.string().min(1),
+  "expiresAt": zod.coerce.date().nullish().describe('Optional expiry date for this code (ISO 8601)')
 })
 
 export const SubmitCodeResponse = zod.object({
@@ -108,7 +109,8 @@ export const SubmitCodeResponse = zod.object({
   "status": zod.enum(['active', 'paused', 'removed']),
   "timesServed": zod.number(),
   "timesCopied": zod.number(),
-  "createdAt": zod.coerce.date()
+  "createdAt": zod.coerce.date(),
+  "expiresAt": zod.coerce.date().nullish()
 })
 
 
@@ -139,7 +141,8 @@ export const GetUserCodesResponseItem = zod.object({
   "status": zod.enum(['active', 'paused', 'removed']),
   "timesServed": zod.number(),
   "timesCopied": zod.number(),
-  "createdAt": zod.coerce.date()
+  "createdAt": zod.coerce.date(),
+  "expiresAt": zod.coerce.date().nullish()
 })
 export const GetUserCodesResponse = zod.array(GetUserCodesResponseItem)
 

@@ -311,6 +311,10 @@ components:
         code:
           type: string
           minLength: 1
+        expiresAt:
+          type: ["string", "null"]
+          format: date-time
+          description: Optional expiry date for this code (ISO 8601)
 
     ReportInput:
       type: object
@@ -340,6 +344,9 @@ components:
           type: number
         createdAt:
           type: string
+          format: date-time
+        expiresAt:
+          type: ["string", "null"]
           format: date-time
 
     UserStats:

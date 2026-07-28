@@ -23,6 +23,7 @@ router.get(
         timesServed: codesTable.timesServed,
         timesCopied: codesTable.timesCopied,
         createdAt: codesTable.createdAt,
+        expiresAt: codesTable.expiresAt,
       })
       .from(codesTable)
       .innerJoin(brandsTable, eq(codesTable.brandId, brandsTable.id))

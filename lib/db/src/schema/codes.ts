@@ -16,6 +16,7 @@ export const codesTable = pgTable("codes", {
   lastServedAt: timestamp("last_served_at", { withTimezone: true }),
   reportCount: integer("report_count").notNull().default(0),
   createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
+  expiresAt: timestamp("expires_at", { withTimezone: true }),
 });
 
 export const insertCodeSchema = createInsertSchema(codesTable).omit({
