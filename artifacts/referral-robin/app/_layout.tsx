@@ -63,7 +63,11 @@ export default function RootLayout() {
   useEffect(() => {
     if (fontsLoaded || fontError) {
       SplashScreen.hideAsync();
+      return;
     }
+    // Safety net: never hang forever if font loading stalls silently
+    const t = setTimeout(() => SplashScreen.hideAsync(), 3000);
+    return () => clearTimeout(t);
   }, [fontsLoaded, fontError]);
 
   if (!fontsLoaded && !fontError) return null;
