@@ -1,7 +1,7 @@
 import React, { useEffect } from 'react';
+import { Platform } from 'react-native';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { GestureHandlerRootView } from 'react-native-gesture-handler';
-import { KeyboardProvider } from 'react-native-keyboard-controller';
 import { SafeAreaProvider } from 'react-native-safe-area-context';
 import { ErrorBoundary } from '@/components/ErrorBoundary';
 import {
@@ -17,7 +17,6 @@ import { ClerkProvider, ClerkLoaded } from '@clerk/expo';
 import { tokenCache } from '@clerk/expo/token-cache';
 import { setBaseUrl } from '@workspace/api-client-react';
 import { DeviceProvider } from '@/context/DeviceContext';
-import { View } from 'react-native';
 
 SplashScreen.preventAutoHideAsync();
 
@@ -53,9 +52,7 @@ export default function RootLayout() {
             <DeviceProvider>
               <ErrorBoundary>
                 <GestureHandlerRootView style={{ flex: 1, backgroundColor: '#0F1117' }}>
-                  <KeyboardProvider>
-                    <Stack screenOptions={{ headerShown: false, contentStyle: { backgroundColor: '#0F1117' } }} />
-                  </KeyboardProvider>
+                  <Stack screenOptions={{ headerShown: false, contentStyle: { backgroundColor: '#0F1117' } }} />
                 </GestureHandlerRootView>
               </ErrorBoundary>
             </DeviceProvider>
