@@ -28,33 +28,21 @@ workflows:
         working_directory: artifacts/referral-robin
         script: |
           export COREPACK_ENABLE_STRICT=0
-          pnpm exec expo prebuild \
-            --platform android \
-            --clean \
-            --no-install
+          pnpm exec expo prebuild --platform android --clean --no-install
 
       - name: Patch build.gradle packaging
         working_directory: artifacts/referral-robin
         script: |
-          python3 - <<'EOF'
-import sys
-path = "android/app/build.gradle"
-content = open(path).read()
-marker = "android {"
-patch = (
-    "android {\n"
-    "    packaging {\n"
-    "        resources {\n"
-    "            excludes += ['META-INF/versions/9/OSGI-INF/MANIFEST.MF']\n"
-    "        }\n"
-    "    }"
-)
-if "META-INF/versions/9/OSGI-INF/MANIFEST.MF" in content:
-    print("Already patched, skipping.")
-    sys.exit(0)
-open(path, "w").write(content.replace(marker, patch, 1))
-print("Patched successfully.")
-EOF
+          python3 -c "
+          path = 'android/app/build.gradle'
+          c = open(path).read()
+          if 'META-INF/versions/9/OSGI-INF/MANIFEST.MF' in c:
+              print('Already patched')
+          else:
+              block = 'android {\n    packaging {\n        resources {\n            excludes += [chr(39)+\"META-INF/versions/9/OSGI-INF/MANIFEST.MF\"+chr(39)]\n        }\n    }'
+              open(path, 'w').write(c.replace('android {', block, 1))
+              print('Patched')
+          "
 
       - name: Build debug APK
         working_directory: artifacts/referral-robin/android
@@ -94,33 +82,21 @@ EOF
         working_directory: artifacts/referral-robin
         script: |
           export COREPACK_ENABLE_STRICT=0
-          pnpm exec expo prebuild \
-            --platform android \
-            --clean \
-            --no-install
+          pnpm exec expo prebuild --platform android --clean --no-install
 
       - name: Patch build.gradle packaging
         working_directory: artifacts/referral-robin
         script: |
-          python3 - <<'EOF'
-import sys
-path = "android/app/build.gradle"
-content = open(path).read()
-marker = "android {"
-patch = (
-    "android {\n"
-    "    packaging {\n"
-    "        resources {\n"
-    "            excludes += ['META-INF/versions/9/OSGI-INF/MANIFEST.MF']\n"
-    "        }\n"
-    "    }"
-)
-if "META-INF/versions/9/OSGI-INF/MANIFEST.MF" in content:
-    print("Already patched, skipping.")
-    sys.exit(0)
-open(path, "w").write(content.replace(marker, patch, 1))
-print("Patched successfully.")
-EOF
+          python3 -c "
+          path = 'android/app/build.gradle'
+          c = open(path).read()
+          if 'META-INF/versions/9/OSGI-INF/MANIFEST.MF' in c:
+              print('Already patched')
+          else:
+              block = 'android {\n    packaging {\n        resources {\n            excludes += [chr(39)+\"META-INF/versions/9/OSGI-INF/MANIFEST.MF\"+chr(39)]\n        }\n    }'
+              open(path, 'w').write(c.replace('android {', block, 1))
+              print('Patched')
+          "
 
       - name: Build release AAB
         working_directory: artifacts/referral-robin/android
