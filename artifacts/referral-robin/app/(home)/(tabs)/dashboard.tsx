@@ -120,7 +120,7 @@ const styles = StyleSheet.create({
   },
   title: {
     fontSize: 24,
-    fontFamily: 'Inter_700Bold',
+   ,
   },
   overallStats: {
     flexDirection: 'row',
@@ -138,11 +138,11 @@ const styles = StyleSheet.create({
   },
   overallStatNumber: {
     fontSize: 24,
-    fontFamily: 'Inter_700Bold',
+   ,
   },
   overallStatLabel: {
     fontSize: 13,
-    fontFamily: 'Inter_500Medium',
+   ,
   },
   list: {
     padding: 16,
@@ -161,7 +161,7 @@ const styles = StyleSheet.create({
   },
   brandName: {
     fontSize: 18,
-    fontFamily: 'Inter_600SemiBold',
+   ,
   },
   statusBadge: {
     paddingHorizontal: 8,
@@ -170,7 +170,7 @@ const styles = StyleSheet.create({
   },
   statusText: {
     fontSize: 12,
-    fontFamily: 'Inter_700Bold',
+   ,
   },
   codeBox: {
     flexDirection: 'row',
@@ -181,7 +181,7 @@ const styles = StyleSheet.create({
   },
   codeText: {
     fontSize: 16,
-    fontFamily: 'Inter_500Medium',
+   ,
     letterSpacing: 2,
   },
   statsRow: {
@@ -195,7 +195,7 @@ const styles = StyleSheet.create({
   },
   statValue: {
     fontSize: 14,
-    fontFamily: 'Inter_500Medium',
+   ,
   },
   emptyState: {
     alignItems: 'center',
@@ -206,11 +206,11 @@ const styles = StyleSheet.create({
   },
   emptyTitle: {
     fontSize: 20,
-    fontFamily: 'Inter_600SemiBold',
+   ,
   },
   emptyDesc: {
     fontSize: 15,
-    fontFamily: 'Inter_400Regular',
+   ,
     textAlign: 'center',
     marginBottom: 16,
   },
@@ -221,6 +221,6 @@ const styles = StyleSheet.create({
   },
   submitButtonText: {
     fontSize: 16,
-    fontFamily: 'Inter_600SemiBold',
+   ,
   },
 });

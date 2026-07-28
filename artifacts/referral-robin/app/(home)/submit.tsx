@@ -102,14 +102,14 @@ export default function SubmitScreen() {
         <Pressable onPress={() => router.back()} style={{ width: 44, height: 44, justifyContent: 'center', alignItems: 'center' }}>
           <Feather name="x" size={24} color={colors.foreground} />
         </Pressable>
-        <Text style={{ fontSize: 18, fontFamily: 'Inter_600SemiBold', color: colors.foreground }}>Submit Code</Text>
+        <Text style={{ fontSize: 18, color: colors.foreground }}>Submit Code</Text>
         <View style={{ width: 44 }} />
       </View>
 
       {/* Brand picker */}
       {!selectedBrand ? (
         <View style={{ flex: 1, padding: 16 }}>
-          <Text style={{ fontSize: 14, fontFamily: 'Inter_500Medium', color: colors.secondaryForeground, marginBottom: 8, marginLeft: 4 }}>
+          <Text style={{ fontSize: 14, color: colors.secondaryForeground, marginBottom: 8, marginLeft: 4 }}>
             Select a Brand
           </Text>
           <View style={{
@@ -119,7 +119,7 @@ export default function SubmitScreen() {
           }}>
             <Feather name="search" size={20} color={colors.mutedForeground} />
             <TextInput
-              style={{ flex: 1, height: '100%', fontFamily: 'Inter_400Regular', fontSize: 16, color: colors.foreground }}
+              style={{ flex: 1, height: '100%', fontSize: 16, color: colors.foreground }}
               placeholder="Search brands..."
               placeholderTextColor={colors.mutedForeground}
               value={search}
@@ -141,8 +141,8 @@ export default function SubmitScreen() {
                 })}
                 onPress={() => setSelectedBrand({ id: item.id, name: item.name })}
               >
-                <Text style={{ fontSize: 16, fontFamily: 'Inter_500Medium', color: colors.foreground }}>{item.name}</Text>
-                <Text style={{ fontSize: 14, fontFamily: 'Inter_400Regular', color: colors.mutedForeground }}>{item.category}</Text>
+                <Text style={{ fontSize: 16, color: colors.foreground }}>{item.name}</Text>
+                <Text style={{ fontSize: 14, color: colors.mutedForeground }}>{item.category}</Text>
               </Pressable>
             )}
           />
@@ -159,21 +159,21 @@ export default function SubmitScreen() {
             onPress={resetForm}
           >
             <View>
-              <Text style={{ fontSize: 12, fontFamily: 'Inter_500Medium', color: colors.mutedForeground, marginBottom: 2 }}>Brand</Text>
-              <Text style={{ fontSize: 18, fontFamily: 'Inter_600SemiBold', color: colors.foreground }}>{selectedBrand.name}</Text>
+              <Text style={{ fontSize: 12, color: colors.mutedForeground, marginBottom: 2 }}>Brand</Text>
+              <Text style={{ fontSize: 18, color: colors.foreground }}>{selectedBrand.name}</Text>
             </View>
             <Feather name="edit-2" size={16} color={colors.mutedForeground} />
           </Pressable>
 
           {/* Code input */}
           <View style={{ gap: 8 }}>
-            <Text style={{ fontSize: 14, fontFamily: 'Inter_500Medium', color: colors.secondaryForeground, marginLeft: 4 }}>
+            <Text style={{ fontSize: 14, color: colors.secondaryForeground, marginLeft: 4 }}>
               Your Referral Code or Link
             </Text>
             <TextInput
               style={{
                 height: 52, borderWidth: 1, borderRadius: 12, paddingHorizontal: 16,
-                fontSize: 16, fontFamily: 'Inter_500Medium',
+                fontSize: 16,,
                 backgroundColor: colors.input, borderColor: colors.border, color: colors.foreground,
               }}
               placeholder="e.g. ROBIN25"
@@ -201,10 +201,10 @@ export default function SubmitScreen() {
               }}
             >
               <View style={{ flex: 1, marginRight: 12 }}>
-                <Text style={{ fontSize: 15, fontFamily: 'Inter_500Medium', color: colors.foreground }}>
+                <Text style={{ fontSize: 15, color: colors.foreground }}>
                   This code expires
                 </Text>
-                <Text style={{ fontSize: 12, fontFamily: 'Inter_400Regular', color: colors.mutedForeground, marginTop: 2 }}>
+                <Text style={{ fontSize: 12, color: colors.mutedForeground, marginTop: 2 }}>
                   Expired codes are automatically removed from the queue
                 </Text>
               </View>
@@ -222,13 +222,13 @@ export default function SubmitScreen() {
 
             {hasExpiry && (
               <View style={{ gap: 6 }}>
-                <Text style={{ fontSize: 14, fontFamily: 'Inter_500Medium', color: colors.secondaryForeground, marginLeft: 4 }}>
+                <Text style={{ fontSize: 14, color: colors.secondaryForeground, marginLeft: 4 }}>
                   Expiry date
                 </Text>
                 <TextInput
                   style={{
                     height: 52, borderWidth: 1, borderRadius: 12, paddingHorizontal: 16,
-                    fontSize: 16, fontFamily: 'Inter_500Medium',
+                    fontSize: 16,,
                     backgroundColor: colors.input,
                     borderColor: expiryError ? '#ef4444' : colors.border,
                     color: colors.foreground,
@@ -242,11 +242,11 @@ export default function SubmitScreen() {
                   maxLength={10}
                 />
                 {expiryError ? (
-                  <Text style={{ fontSize: 12, fontFamily: 'Inter_400Regular', color: '#ef4444', marginLeft: 4 }}>
+                  <Text style={{ fontSize: 12, color: '#ef4444', marginLeft: 4 }}>
                     {expiryError}
                   </Text>
                 ) : (
-                  <Text style={{ fontSize: 12, fontFamily: 'Inter_400Regular', color: colors.mutedForeground, marginLeft: 4 }}>
+                  <Text style={{ fontSize: 12, color: colors.mutedForeground, marginLeft: 4 }}>
                     Enter the date the offer ends (e.g. 31/12/2025)
                   </Text>
                 )}
@@ -264,7 +264,7 @@ export default function SubmitScreen() {
             onPress={handleSubmit}
             disabled={!canSubmit}
           >
-            <Text style={{ fontSize: 16, fontFamily: 'Inter_600SemiBold', color: colors.primaryForeground }}>
+            <Text style={{ fontSize: 16, color: colors.primaryForeground }}>
               {submitCode.isPending ? 'Submitting…' : 'Submit to Queue'}
             </Text>
           </Pressable>

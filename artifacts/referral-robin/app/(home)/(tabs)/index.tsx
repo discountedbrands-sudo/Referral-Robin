@@ -39,7 +39,7 @@ export default function ExploreScreen() {
         backgroundColor: colors.primary,
         alignItems: 'center', justifyContent: 'center',
       }}>
-        <Text style={{ color: '#fff', fontSize: 15, fontFamily: 'Inter_700Bold' }}>
+        <Text style={{ color: '#fff', fontSize: 15, }}>
           {item.name.charAt(0)}
         </Text>
       </View>
@@ -120,7 +120,7 @@ export default function ExploreScreen() {
                   borderColor: sel ? colors.primary : 'transparent',
                 }}
               >
-                <Text style={{ fontSize: 13, fontFamily: 'Inter_500Medium', color: sel ? '#fff' : colors.mutedForeground }}>
+                <Text style={{ fontSize: 13, color: sel ? '#fff' : colors.mutedForeground }}>
                   {item}
                 </Text>
               </Pressable>
@@ -140,7 +140,7 @@ export default function ExploreScreen() {
         {!isLoading && brands.length === 0 && (
           <View style={{ alignItems: 'center', paddingTop: 60, gap: 12 }}>
             <MaterialCommunityIcons name="magnify-close" size={48} color={colors.mutedForeground} />
-            <Text style={{ color: colors.foreground, fontSize: 17, fontFamily: 'Inter_600SemiBold' }}>No brands found</Text>
+            <Text style={{ color: colors.foreground, fontSize: 17, }}>No brands found</Text>
             <Text style={{ color: colors.mutedForeground, fontSize: 14, textAlign: 'center' }}>Try a different search or category.</Text>
           </View>
         )}
@@ -160,17 +160,17 @@ export default function ExploreScreen() {
                   <Logo item={item} />
 
                   <View style={{ gap: 3 }}>
-                    <Text style={{ fontSize: 14, fontFamily: 'Inter_600SemiBold', color: colors.foreground }} numberOfLines={1}>
+                    <Text style={{ fontSize: 14, color: colors.foreground }} numberOfLines={1}>
                       {item.name}
                     </Text>
 
                     {item.currentOffer ? (
-                      <Text style={{ fontSize: 11, color: colors.accent, fontFamily: 'Inter_400Regular', lineHeight: 15 }} numberOfLines={2}>
+                      <Text style={{ fontSize: 11, color: colors.accent, lineHeight: 15 }} numberOfLines={2}>
                         {item.currentOffer}
                       </Text>
                     ) : null}
 
-                    <Text style={{ fontSize: 11, color: colors.mutedForeground, fontFamily: 'Inter_400Regular', marginTop: 2 }}>
+                    <Text style={{ fontSize: 11, color: colors.mutedForeground, marginTop: 2 }}>
                       {item.codeCount} code{item.codeCount !== 1 ? 's' : ''}
                     </Text>
                   </View>
@@ -195,18 +195,18 @@ export default function ExploreScreen() {
               <Logo item={item} />
 
               <View style={{ flex: 1, gap: 2 }}>
-                <Text style={{ fontSize: 15, fontFamily: 'Inter_600SemiBold', color: colors.foreground }} numberOfLines={1}>
+                <Text style={{ fontSize: 15, color: colors.foreground }} numberOfLines={1}>
                   {item.name}
                 </Text>
                 {item.currentOffer ? (
-                  <Text style={{ fontSize: 12, color: colors.accent, fontFamily: 'Inter_400Regular' }} numberOfLines={1}>
+                  <Text style={{ fontSize: 12, color: colors.accent, }} numberOfLines={1}>
                     {item.currentOffer}
                   </Text>
                 ) : null}
               </View>
 
               <View style={{ alignItems: 'flex-end', gap: 4 }}>
-                <Text style={{ fontSize: 12, color: colors.mutedForeground, fontFamily: 'Inter_400Regular' }}>
+                <Text style={{ fontSize: 12, color: colors.mutedForeground, }}>
                   {item.codeCount} code{item.codeCount !== 1 ? 's' : ''}
                 </Text>
                 <Feather name="chevron-right" size={14} color={colors.mutedForeground} />

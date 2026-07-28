@@ -236,7 +236,7 @@ const styles = StyleSheet.create({
   },
   headerTitle: {
     fontSize: 20,
-    fontFamily: 'Inter_600SemiBold',
+   ,
   },
   content: {
     flex: 1,
@@ -254,11 +254,11 @@ const styles = StyleSheet.create({
   },
   offerTitle: {
     fontSize: 18,
-    fontFamily: 'Inter_600SemiBold',
+   ,
   },
   offerText: {
     fontSize: 16,
-    fontFamily: 'Inter_500Medium',
+   ,
     textAlign: 'center',
   },
   actionSection: {
@@ -276,7 +276,7 @@ const styles = StyleSheet.create({
   infoText: {
     flex: 1,
     fontSize: 14,
-    fontFamily: 'Inter_400Regular',
+   ,
     lineHeight: 20,
   },
   mainButton: {
@@ -292,7 +292,7 @@ const styles = StyleSheet.create({
   },
   mainButtonText: {
     fontSize: 18,
-    fontFamily: 'Inter_600SemiBold',
+   ,
   },
   revealSection: {
     gap: 24,
@@ -308,11 +308,11 @@ const styles = StyleSheet.create({
   },
   codeLabel: {
     fontSize: 14,
-    fontFamily: 'Inter_500Medium',
+   ,
   },
   revealedCodeText: {
     fontSize: 32,
-    fontFamily: 'Inter_700Bold',
+   ,
     letterSpacing: 2,
     textAlign: 'center',
   },
@@ -327,7 +327,7 @@ const styles = StyleSheet.create({
   },
   copyButtonText: {
     fontSize: 16,
-    fontFamily: 'Inter_600SemiBold',
+   ,
   },
   reportButton: {
     flexDirection: 'row',
@@ -338,6 +338,6 @@ const styles = StyleSheet.create({
   },
   reportText: {
     fontSize: 14,
-    fontFamily: 'Inter_500Medium',
+   ,
   },
 });
