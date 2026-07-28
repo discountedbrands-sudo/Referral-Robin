@@ -6,6 +6,10 @@
  * OpenAPI spec version: 0.1.0
  */
 
-export interface HealthStatus {
-  status: string;
+export interface CooldownStatus {
+  isOnCooldown: boolean;
+  /** @nullable */
+  expiresAt?: string | null;
+  /** @nullable */
+  remainingSeconds?: number | null;
 }

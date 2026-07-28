@@ -3,13 +3,22 @@ info:
   # Do not change the title, if the title changes, the import paths will be broken
   title: Api
   version: 0.1.0
-  description: API specification
+  description: Referral Robin API — fair-rotation referral code marketplace
 servers:
   - url: /api
     description: Base API path
 tags:
   - name: health
     description: Health operations
+  - name: brands
+    description: Brand operations
+  - name: codes
+    description: Code queue and submission operations
+  - name: user
+    description: Authenticated user operations
+  - name: cooldown
+    description: Device cooldown status
+
 paths:
   /healthz:
     get:
@@ -24,13 +33,351 @@ paths:
             application/json:
               schema:
                 $ref: "#/components/schemas/HealthStatus"
+
+  /brands:
+    get:
+      operationId: listBrands
+      tags: [brands]
+      summary: List active brands
+      parameters:
+        - name: category
+          in: query
+          required: false
+          schema:
+            type: string
+        - name: search
+          in: query
+          required: false
+          schema:
+            type: string
+      responses:
+        "200":
+          description: List of active brands
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/Brand"
+
+  /brands/{brandId}:
+    get:
+      operationId: getBrand
+      tags: [brands]
+      summary: Get brand by ID
+      parameters:
+        - name: brandId
+          in: path
+          required: true
+          schema:
+            type: number
+      responses:
+        "200":
+          description: Brand details
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Brand"
+        "404":
+          description: Brand not found
+
+  /codes/next:
+    post:
+      operationId: getNextCode
+      tags: [codes]
+      summary: Get next code in weighted queue for a brand
+      description: >
+        Checks device cooldown, serves the next code in the weighted round-robin queue,
+        advances the cursor, sets a 10-minute device cooldown, and returns the code + offer.
+        Codes are never returned in lists — always served one at a time through this endpoint.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/NextCodeInput"
+      responses:
+        "200":
+          description: Code revealed
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/CodeReveal"
+        "429":
+          description: Device is on cooldown for this brand
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/CooldownError"
+        "404":
+          description: No codes available for this brand
+
+  /codes/confirm-copy:
+    post:
+      operationId: confirmCopy
+      tags: [codes]
+      summary: Confirm that a code was copied — increments timesCopied
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/ConfirmCopyInput"
+      responses:
+        "200":
+          description: Copy confirmed
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/SuccessResult"
+
+  /codes/submit:
+    post:
+      operationId: submitCode
+      tags: [codes]
+      summary: Submit a new referral code (authenticated)
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/CodeInput"
+      responses:
+        "201":
+          description: Code submitted
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/UserCode"
+        "401":
+          description: Unauthorized
+
+  /codes/{codeId}/report:
+    post:
+      operationId: reportCode
+      tags: [codes]
+      summary: Report a dead or invalid code
+      parameters:
+        - name: codeId
+          in: path
+          required: true
+          schema:
+            type: number
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/ReportInput"
+      responses:
+        "200":
+          description: Report received
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/SuccessResult"
+        "404":
+          description: Code not found
+
+  /user/codes:
+    get:
+      operationId: getUserCodes
+      tags: [user]
+      summary: Get authenticated user's submitted codes with stats
+      responses:
+        "200":
+          description: User's codes
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/UserCode"
+        "401":
+          description: Unauthorized
+
+  /user/stats:
+    get:
+      operationId: getUserStats
+      tags: [user]
+      summary: Get authenticated user's lifetime aggregate stats
+      responses:
+        "200":
+          description: User stats
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/UserStats"
+        "401":
+          description: Unauthorized
+
+  /cooldown:
+    get:
+      operationId: getCooldown
+      tags: [cooldown]
+      summary: Check device cooldown status for a brand
+      parameters:
+        - name: brandId
+          in: query
+          required: true
+          schema:
+            type: number
+        - name: deviceId
+          in: query
+          required: true
+          schema:
+            type: string
+      responses:
+        "200":
+          description: Cooldown status
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/CooldownStatus"
+
 components:
   schemas:
     HealthStatus:
       type: object
+      required: [status]
       properties:
         status:
           type: string
-      required:
-        - status
 
+    Brand:
+      type: object
+      required: [id, name, category, active]
+      properties:
+        id:
+          type: number
+        name:
+          type: string
+        logoUrl:
+          type: ["string", "null"]
+        currentOffer:
+          type: ["string", "null"]
+        offerUpdatedAt:
+          type: ["string", "null"]
+        category:
+          type: string
+        active:
+          type: boolean
+        codeCount:
+          type: number
+          description: Number of active codes in the queue
+
+    CodeReveal:
+      type: object
+      required: [codeId, code, brandId, brandName, cooldownUntil]
+      properties:
+        codeId:
+          type: number
+        code:
+          type: string
+        brandId:
+          type: number
+        brandName:
+          type: string
+        currentOffer:
+          type: ["string", "null"]
+        cooldownUntil:
+          type: string
+          format: date-time
+
+    NextCodeInput:
+      type: object
+      required: [brandId, deviceId]
+      properties:
+        brandId:
+          type: number
+        deviceId:
+          type: string
+
+    ConfirmCopyInput:
+      type: object
+      required: [codeId, deviceId]
+      properties:
+        codeId:
+          type: number
+        deviceId:
+          type: string
+
+    CodeInput:
+      type: object
+      required: [brandId, code]
+      properties:
+        brandId:
+          type: number
+        code:
+          type: string
+          minLength: 1
+
+    ReportInput:
+      type: object
+      required: [deviceId]
+      properties:
+        deviceId:
+          type: string
+
+    UserCode:
+      type: object
+      required: [id, brandId, brandName, code, status, timesServed, timesCopied, createdAt]
+      properties:
+        id:
+          type: number
+        brandId:
+          type: number
+        brandName:
+          type: string
+        code:
+          type: string
+        status:
+          type: string
+          enum: [active, paused, removed]
+        timesServed:
+          type: number
+        timesCopied:
+          type: number
+        createdAt:
+          type: string
+          format: date-time
+
+    UserStats:
+      type: object
+      required: [totalCodesSubmitted, totalTimesServed, totalTimesCopied]
+      properties:
+        totalCodesSubmitted:
+          type: number
+        totalTimesServed:
+          type: number
+        totalTimesCopied:
+          type: number
+
+    CooldownStatus:
+      type: object
+      required: [isOnCooldown]
+      properties:
+        isOnCooldown:
+          type: boolean
+        expiresAt:
+          type: ["string", "null"]
+        remainingSeconds:
+          type: ["number", "null"]
+
+    CooldownError:
+      type: object
+      required: [error, expiresAt, remainingSeconds]
+      properties:
+        error:
+          type: string
+        expiresAt:
+          type: string
+        remainingSeconds:
+          type: number
+
+    SuccessResult:
+      type: object
+      required: [success]
+      properties:
+        success:
+          type: boolean

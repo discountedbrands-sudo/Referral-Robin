@@ -1,0 +1,23 @@
+kind = "mobile"
+previewPath = "/"
+title = "Referral Robin"
+version = "1.0.0"
+id = "artifacts/referral-robin"
+router = "expo-domain"
+
+[[services]]
+name = "expo"
+ensurePreviewReachable = "/status"
+paths = [ "/" ]
+localPort = 21758
+
+[services.development]
+run = "pnpm --filter @workspace/referral-robin run dev"
+
+[services.production]
+build = [ "pnpm", "--filter", "@workspace/referral-robin", "run", "build" ]
+run = [ "pnpm", "--filter", "@workspace/referral-robin", "run", "serve" ]
+
+[services.env]
+PORT = "21758"
+BASE_PATH = "/"

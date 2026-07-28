@@ -6,6 +6,8 @@
  * OpenAPI spec version: 0.1.0
  */
 
-export interface HealthStatus {
-  status: string;
+export interface CodeInput {
+  brandId: number;
+  /** @minLength 1 */
+  code: string;
 }
