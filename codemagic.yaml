@@ -39,7 +39,9 @@ workflows:
           if 'META-INF/versions/9/OSGI-INF/MANIFEST.MF' in c:
               print('Already patched')
           else:
-              block = 'android {\n    packaging {\n        resources {\n            excludes += [chr(39)+\"META-INF/versions/9/OSGI-INF/MANIFEST.MF\"+chr(39)]\n        }\n    }'
+              q = chr(39)
+              excl = q + 'META-INF/versions/9/OSGI-INF/MANIFEST.MF' + q
+              block = 'android {\n    packaging {\n        resources {\n            excludes += [' + excl + ']\n        }\n    }'
               open(path, 'w').write(c.replace('android {', block, 1))
               print('Patched')
           "
@@ -93,7 +95,9 @@ workflows:
           if 'META-INF/versions/9/OSGI-INF/MANIFEST.MF' in c:
               print('Already patched')
           else:
-              block = 'android {\n    packaging {\n        resources {\n            excludes += [chr(39)+\"META-INF/versions/9/OSGI-INF/MANIFEST.MF\"+chr(39)]\n        }\n    }'
+              q = chr(39)
+              excl = q + 'META-INF/versions/9/OSGI-INF/MANIFEST.MF' + q
+              block = 'android {\n    packaging {\n        resources {\n            excludes += [' + excl + ']\n        }\n    }'
               open(path, 'w').write(c.replace('android {', block, 1))
               print('Patched')
           "
