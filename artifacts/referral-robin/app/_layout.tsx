@@ -29,8 +29,28 @@ const domain = process.env.EXPO_PUBLIC_DOMAIN;
 if (apiUrl) setBaseUrl(apiUrl);
 else if (domain) setBaseUrl(`https://${domain}`);
 
-const publishableKey = process.env.EXPO_PUBLIC_CLERK_PUBLISHABLE_KEY!;
+const publishableKey = process.env.EXPO_PUBLIC_CLERK_PUBLISHABLE_KEY || '';
 const proxyUrl = process.env.EXPO_PUBLIC_CLERK_PROXY_URL || undefined;
+
+function AppShell() {
+  return (
+    <QueryClientProvider client={queryClient}>
+      <SafeAreaProvider>
+        <DeviceProvider>
+          <ErrorBoundary>
+            {Platform.OS === 'web' ? (
+              <Stack screenOptions={{ headerShown: false, contentStyle: { backgroundColor: '#0F1117' } }} />
+            ) : (
+              <GestureHandlerRootView style={{ flex: 1, backgroundColor: '#0F1117' }}>
+                <Stack screenOptions={{ headerShown: false, contentStyle: { backgroundColor: '#0F1117' } }} />
+              </GestureHandlerRootView>
+            )}
+          </ErrorBoundary>
+        </DeviceProvider>
+      </SafeAreaProvider>
+    </QueryClientProvider>
+  );
+}
 
 export default function RootLayout() {
   const [fontsLoaded, fontError] = useFonts({
@@ -48,24 +68,15 @@ export default function RootLayout() {
 
   if (!fontsLoaded && !fontError) return null;
 
+  // If no Clerk key is baked in (e.g. a test APK build), skip auth entirely.
+  if (!publishableKey) {
+    return <AppShell />;
+  }
+
   return (
     <ClerkProvider publishableKey={publishableKey} tokenCache={tokenCache} proxyUrl={proxyUrl}>
       <ClerkLoaded>
-        <QueryClientProvider client={queryClient}>
-          <SafeAreaProvider>
-            <DeviceProvider>
-              <ErrorBoundary>
-                {Platform.OS === 'web' ? (
-                  <Stack screenOptions={{ headerShown: false, contentStyle: { backgroundColor: '#0F1117' } }} />
-                ) : (
-                  <GestureHandlerRootView style={{ flex: 1, backgroundColor: '#0F1117' }}>
-                    <Stack screenOptions={{ headerShown: false, contentStyle: { backgroundColor: '#0F1117' } }} />
-                  </GestureHandlerRootView>
-                )}
-              </ErrorBoundary>
-            </DeviceProvider>
-          </SafeAreaProvider>
-        </QueryClientProvider>
+        <AppShell />
       </ClerkLoaded>
     </ClerkProvider>
   );
