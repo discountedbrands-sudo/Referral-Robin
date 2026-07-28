@@ -36,8 +36,25 @@ workflows:
       - name: Patch build.gradle packaging
         working_directory: artifacts/referral-robin
         script: |
-          # Exclude duplicate META-INF file from okhttp3/jspecify JARs
-          sed -i 's/^android {/android {\n    packaging {\n        resources {\n            excludes += ["META-INF\/versions\/9\/OSGI-INF\/MANIFEST.MF"]\n        }\n    }/' android/app/build.gradle
+          python3 - <<'EOF'
+import sys
+path = "android/app/build.gradle"
+content = open(path).read()
+marker = "android {"
+patch = (
+    "android {\n"
+    "    packaging {\n"
+    "        resources {\n"
+    "            excludes += ['META-INF/versions/9/OSGI-INF/MANIFEST.MF']\n"
+    "        }\n"
+    "    }"
+)
+if "META-INF/versions/9/OSGI-INF/MANIFEST.MF" in content:
+    print("Already patched, skipping.")
+    sys.exit(0)
+open(path, "w").write(content.replace(marker, patch, 1))
+print("Patched successfully.")
+EOF
 
       - name: Build debug APK
         working_directory: artifacts/referral-robin/android
@@ -85,7 +102,25 @@ workflows:
       - name: Patch build.gradle packaging
         working_directory: artifacts/referral-robin
         script: |
-          sed -i 's/^android {/android {\n    packaging {\n        resources {\n            excludes += ["META-INF\/versions\/9\/OSGI-INF\/MANIFEST.MF"]\n        }\n    }/' android/app/build.gradle
+          python3 - <<'EOF'
+import sys
+path = "android/app/build.gradle"
+content = open(path).read()
+marker = "android {"
+patch = (
+    "android {\n"
+    "    packaging {\n"
+    "        resources {\n"
+    "            excludes += ['META-INF/versions/9/OSGI-INF/MANIFEST.MF']\n"
+    "        }\n"
+    "    }"
+)
+if "META-INF/versions/9/OSGI-INF/MANIFEST.MF" in content:
+    print("Already patched, skipping.")
+    sys.exit(0)
+open(path, "w").write(content.replace(marker, patch, 1))
+print("Patched successfully.")
+EOF
 
       - name: Build release AAB
         working_directory: artifacts/referral-robin/android
