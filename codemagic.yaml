@@ -1,7 +1,8 @@
 workflows:
 
   # ─────────────────────────────────────────────────────────────
-  # Preview — unsigned APK, sideload directly to your phone
+  # Preview — debug APK, sideload directly to your phone
+  # No signing required.
   # ─────────────────────────────────────────────────────────────
   android-preview:
     name: Android Preview (APK)
@@ -11,7 +12,7 @@ workflows:
     environment:
       node: 22.14.0
       vars:
-        EXPO_PUBLIC_API_URL: $EXPO_PUBLIC_API_URL         # set in Codemagic env
+        EXPO_PUBLIC_API_URL: $EXPO_PUBLIC_API_URL
         EXPO_PUBLIC_CLERK_PUBLISHABLE_KEY: $EXPO_PUBLIC_CLERK_PUBLISHABLE_KEY
 
     scripts:
@@ -20,7 +21,7 @@ workflows:
           export COREPACK_ENABLE_STRICT=0
           pnpm install --frozen-lockfile
 
-      - name: Expo prebuild (generates android/ folder)
+      - name: Expo prebuild
         working_directory: artifacts/referral-robin
         script: |
           export COREPACK_ENABLE_STRICT=0
@@ -32,7 +33,7 @@ workflows:
       - name: Build debug APK
         working_directory: artifacts/referral-robin/android
         script: |
-          ./gradlew assembleRelease \
+          ./gradlew assembleDebug \
             -PreactNativeArchitectures=arm64-v8a \
             --no-daemon
 
@@ -41,6 +42,7 @@ workflows:
 
   # ─────────────────────────────────────────────────────────────
   # Production — signed AAB for the Play Store
+  # Requires keystore named "referral_robin_keystore" in Codemagic.
   # ─────────────────────────────────────────────────────────────
   android-production:
     name: Android Production (AAB)
@@ -50,15 +52,12 @@ workflows:
     environment:
       node: 22.14.0
       android_signing:
-        - referral_robin_keystore       # keystore name set up in Codemagic
+        - referral_robin_keystore
       vars:
         EXPO_PUBLIC_API_URL: $EXPO_PUBLIC_API_URL
         EXPO_PUBLIC_CLERK_PUBLISHABLE_KEY: $EXPO_PUBLIC_CLERK_PUBLISHABLE_KEY
 
     scripts:
-      - name: Install pnpm
-        script: npm install -g pnpm@10
-
       - name: Install dependencies
         script: |
           export COREPACK_ENABLE_STRICT=0
@@ -83,9 +82,3 @@ workflows:
     artifacts:
       - artifacts/referral-robin/android/app/build/outputs/bundle/**/*.aab
       - artifacts/referral-robin/android/app/build/outputs/mapping/**/*.txt
-
-    publishing:
-      google_play:
-        credentials: $GCLOUD_SERVICE_ACCOUNT_CREDENTIALS   # JSON key, set in Codemagic env
-        track: internal
-        submit_as_draft: true
