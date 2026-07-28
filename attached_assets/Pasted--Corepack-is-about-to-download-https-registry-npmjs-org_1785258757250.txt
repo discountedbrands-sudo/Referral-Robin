@@ -1,0 +1,92 @@
+ Corepack is about to download https://registry.npmjs.org/pnpm/-/pnpm-11.17.0.tgz
+Scope: all 9 workspace projects
+? Verifying lockfile against supply-chain policies (1192 entries)...
+Lockfile is up to date, resolution step is skipped
+Progress: resolved 1, reused 0, downloaded 0, added 0
+Packages: +1212
+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+Progress: resolved 1212, reused 0, downloaded 62, added 4
+Progress: resolved 1212, reused 0, downloaded 269, added 52
+Progress: resolved 1212, reused 0, downloaded 331, added 100
+Progress: resolved 1212, reused 0, downloaded 373, added 104
+Progress: resolved 1212, reused 0, downloaded 499, added 112
+Progress: resolved 1212, reused 0, downloaded 706, added 128
+Progress: resolved 1212, reused 0, downloaded 812, added 138
+Progress: resolved 1212, reused 0, downloaded 901, added 146
+Progress: resolved 1212, reused 0, downloaded 942, added 150
+✓ Lockfile passes supply-chain policies (1192 entries in 9.5s)
+Progress: resolved 1212, reused 0, downloaded 1055, added 158
+Progress: resolved 1212, reused 0, downloaded 1118, added 163
+Progress: resolved 1212, reused 0, downloaded 1183, added 203
+Progress: resolved 1212, reused 0, downloaded 1184, added 363
+Progress: resolved 1212, reused 0, downloaded 1185, added 478
+Progress: resolved 1212, reused 0, downloaded 1185, added 570
+Progress: resolved 1212, reused 0, downloaded 1185, added 680
+Progress: resolved 1212, reused 0, downloaded 1186, added 869
+Progress: resolved 1212, reused 0, downloaded 1186, added 1029
+Progress: resolved 1212, reused 0, downloaded 1186, added 1200
+! Corepack is about to download https://registry.npmjs.org/pnpm/-/pnpm-11.17.0.tgz
+Scope: all 9 workspace projects
+? Verifying lockfile against supply-chain policies (1192 entries)...
+Lockfile is up to date, resolution step is skipped
+Progress: resolved 1, reused 0, downloaded 0, added 0
+Packages: +1212
+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+Progress: resolved 1212, reused 0, downloaded 62, added 4
+Progress: resolved 1212, reused 0, downloaded 269, added 52
+Progress: resolved 1212, reused 0, downloaded 331, added 100
+Progress: resolved 1212, reused 0, downloaded 373, added 104
+Progress: resolved 1212, reused 0, downloaded 499, added 112
+Progress: resolved 1212, reused 0, downloaded 706, added 128
+Progress: resolved 1212, reused 0, downloaded 812, added 138
+Progress: resolved 1212, reused 0, downloaded 901, added 146
+Progress: resolved 1212, reused 0, downloaded 942, added 150
+✓ Lockfile passes supply-chain policies (1192 entries in 9.5s)
+Progress: resolved 1212, reused 0, downloaded 1055, added 158
+Progress: resolved 1212, reused 0, downloaded 1118, added 163
+Progress: resolved 1212, reused 0, downloaded 1183, added 203
+Progress: resolved 1212, reused 0, downloaded 1184, added 363
+Progress: resolved 1212, reused 0, downloaded 1185, added 478
+Progress: resolved 1212, reused 0, downloaded 1185, added 570
+Progress: resolved 1212, reused 0, downloaded 1185, added 680
+Progress: resolved 1212, reused 0, downloaded 1186, added 869
+Progress: resolved 1212, reused 0, downloaded 1186, added 1029
+Progress: resolved 1212, reused 0, downloaded 1186, added 1200
+Progress: resolved 1212, reused 0, downloaded 1186, added 1211
+Progress: resolved 1212, reused 0, downloaded 1186, added 1212, done
+
+dependencies:
++ @replit/connectors-sdk 0.4.1
+
+devDependencies:
++ prettier 3.9.6
++ typescript 5.9.3
+
+. preinstall$ sh -c 'rm -f package-lock.json yarn.lock; case "$npm_config_user_agent" in pnpm/*) ;; *) echo "Use pnpm instead" >&2; exit 1 ;; esac'
+. preinstall: Done
+[ERR_PNPM_IGNORED_BUILDS] Ignored build scripts: browser-tabs-lock@1.3.0, core-js@3.47.0, esbuild@0.27.3
+
+Run "pnpm approve-builds" to pick which dependencies should be allowed to run scripts.
+
+
+Build failed :|
+Step 2 script `Install dependencies` exited with status code 1
+Progress: resolved 1212, reused 0, downloaded 1186, added 1211
+Progress: resolved 1212, reused 0, downloaded 1186, added 1212, done
+
+dependencies:
++ @replit/connectors-sdk 0.4.1
+
+devDependencies:
++ prettier 3.9.6
++ typescript 5.9.3
+
+. preinstall$ sh -c 'rm -f package-lock.json yarn.lock; case "$npm_config_user_agent" in pnpm/*) ;; *) echo "Use pnpm instead" >&2; exit 1 ;; esac'
+. preinstall: Done
+[ERR_PNPM_IGNORED_BUILDS] Ignored build scripts: browser-tabs-lock@1.3.0, core-js@3.47.0, esbuild@0.27.3
+
+Run "pnpm approve-builds" to pick which dependencies should be allowed to run scripts.
+
+
+Build failed :|
+Step 2 script `Install dependencies` exited with status code 1
