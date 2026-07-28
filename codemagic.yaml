@@ -15,9 +15,6 @@ workflows:
         EXPO_PUBLIC_CLERK_PUBLISHABLE_KEY: $EXPO_PUBLIC_CLERK_PUBLISHABLE_KEY
 
     scripts:
-      - name: Install pnpm
-        script: npm install -g pnpm@10
-
       - name: Install dependencies
         script: pnpm install --frozen-lockfile
 
