@@ -16,11 +16,14 @@ workflows:
 
     scripts:
       - name: Install dependencies
-        script: pnpm install --frozen-lockfile
+        script: |
+          export COREPACK_ENABLE_STRICT=0
+          pnpm install --frozen-lockfile
 
       - name: Expo prebuild (generates android/ folder)
         working_directory: artifacts/referral-robin
         script: |
+          export COREPACK_ENABLE_STRICT=0
           pnpm exec expo prebuild \
             --platform android \
             --clean \
@@ -57,11 +60,14 @@ workflows:
         script: npm install -g pnpm@10
 
       - name: Install dependencies
-        script: pnpm install --frozen-lockfile
+        script: |
+          export COREPACK_ENABLE_STRICT=0
+          pnpm install --frozen-lockfile
 
       - name: Expo prebuild
         working_directory: artifacts/referral-robin
         script: |
+          export COREPACK_ENABLE_STRICT=0
           pnpm exec expo prebuild \
             --platform android \
             --clean \
