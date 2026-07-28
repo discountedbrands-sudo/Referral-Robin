@@ -1,0 +1,8 @@
+uploads = []
+generated = []
+
+[[outputs]]
+id = "aOz6GkBzYp5rh8GrRLj1A"
+uri = "file://attached_assets/referral-robin-icon.svg"
+type = "image"
+title = "Referral Robin App Icon"
