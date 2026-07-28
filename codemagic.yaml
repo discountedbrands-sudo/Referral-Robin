@@ -1,0 +1,102 @@
+workflows:
+
+  # ─────────────────────────────────────────────────────────────
+  # Preview — unsigned APK, sideload directly to your phone
+  # ─────────────────────────────────────────────────────────────
+  android-preview:
+    name: Android Preview (APK)
+    max_build_duration: 60
+    instance_type: mac_mini_m2
+
+    environment:
+      node: 22.x
+      vars:
+        EXPO_PUBLIC_API_URL: $EXPO_PUBLIC_API_URL         # set in Codemagic env
+        EXPO_PUBLIC_CLERK_PUBLISHABLE_KEY: $EXPO_PUBLIC_CLERK_PUBLISHABLE_KEY
+
+    scripts:
+      - name: Install pnpm
+        script: npm install -g pnpm@10
+
+      - name: Install dependencies
+        script: pnpm install --frozen-lockfile
+
+      - name: Expo prebuild (generates android/ folder)
+        working_directory: artifacts/referral-robin
+        script: |
+          pnpm exec expo prebuild \
+            --platform android \
+            --clean \
+            --no-install
+
+      - name: Build debug APK
+        working_directory: artifacts/referral-robin/android
+        script: |
+          ./gradlew assembleRelease \
+            -PreactNativeArchitectures=arm64-v8a \
+            --no-daemon
+
+    artifacts:
+      - artifacts/referral-robin/android/app/build/outputs/apk/**/*.apk
+
+    publishing:
+      email:
+        recipients:
+          - $CM_EMAIL
+        notify:
+          success: true
+          failure: true
+
+  # ─────────────────────────────────────────────────────────────
+  # Production — signed AAB for the Play Store
+  # ─────────────────────────────────────────────────────────────
+  android-production:
+    name: Android Production (AAB)
+    max_build_duration: 60
+    instance_type: mac_mini_m2
+
+    environment:
+      node: 22.x
+      android_signing:
+        - referral_robin_keystore       # keystore name set up in Codemagic
+      vars:
+        EXPO_PUBLIC_API_URL: $EXPO_PUBLIC_API_URL
+        EXPO_PUBLIC_CLERK_PUBLISHABLE_KEY: $EXPO_PUBLIC_CLERK_PUBLISHABLE_KEY
+
+    scripts:
+      - name: Install pnpm
+        script: npm install -g pnpm@10
+
+      - name: Install dependencies
+        script: pnpm install --frozen-lockfile
+
+      - name: Expo prebuild
+        working_directory: artifacts/referral-robin
+        script: |
+          pnpm exec expo prebuild \
+            --platform android \
+            --clean \
+            --no-install
+
+      - name: Build release AAB
+        working_directory: artifacts/referral-robin/android
+        script: |
+          ./gradlew bundleRelease \
+            -PreactNativeArchitectures=arm64-v8a \
+            --no-daemon
+
+    artifacts:
+      - artifacts/referral-robin/android/app/build/outputs/bundle/**/*.aab
+      - artifacts/referral-robin/android/app/build/outputs/mapping/**/*.txt
+
+    publishing:
+      google_play:
+        credentials: $GCLOUD_SERVICE_ACCOUNT_CREDENTIALS   # JSON key, set in Codemagic env
+        track: internal
+        submit_as_draft: true
+      email:
+        recipients:
+          - $CM_EMAIL
+        notify:
+          success: true
+          failure: true
