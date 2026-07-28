@@ -18,13 +18,16 @@ workflows:
     scripts:
       - name: Install dependencies
         script: |
-          # Pin pnpm v9 — our lockfile is format v9.0 and v9 has no ERR_PNPM_IGNORED_BUILDS
-          npm install -g pnpm@9
+          export COREPACK_ENABLE_STRICT=0
+          # Force-install pnpm@10.26.1 — exact match to local version that
+          # generated the lockfile; v10 has no ERR_PNPM_IGNORED_BUILDS.
+          npm install -g pnpm@10.26.1 --force
           pnpm install --frozen-lockfile
 
       - name: Expo prebuild
         working_directory: artifacts/referral-robin
         script: |
+          export COREPACK_ENABLE_STRICT=0
           pnpm exec expo prebuild \
             --platform android \
             --clean \
@@ -60,12 +63,14 @@ workflows:
     scripts:
       - name: Install dependencies
         script: |
-          npm install -g pnpm@9
+          export COREPACK_ENABLE_STRICT=0
+          npm install -g pnpm@10.26.1 --force
           pnpm install --frozen-lockfile
 
       - name: Expo prebuild
         working_directory: artifacts/referral-robin
         script: |
+          export COREPACK_ENABLE_STRICT=0
           pnpm exec expo prebuild \
             --platform android \
             --clean \
