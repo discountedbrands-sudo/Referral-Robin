@@ -1,26 +1,40 @@
 import { useSignIn, useSSO } from '@clerk/expo';
 import { type Href, Link, useRouter } from 'expo-router';
 import React, { useCallback, useEffect } from 'react';
-import { Pressable, StyleSheet, TextInput, View, Text, Platform } from 'react-native';
+import {
+  Pressable,
+  StyleSheet,
+  TextInput,
+  View,
+  Text,
+  Platform,
+  ScrollView,
+} from 'react-native';
 import { useColors } from '@/hooks/useColors';
-import { Feather, MaterialCommunityIcons } from '@expo/vector-icons';
+import { MaterialCommunityIcons } from '@expo/vector-icons';
 import * as WebBrowser from 'expo-web-browser';
 import * as AuthSession from 'expo-auth-session';
 
-export const useWarmUpBrowser = () => {
+WebBrowser.maybeCompleteAuthSession();
+
+function navigateAfterAuth(url: string, router: ReturnType<typeof useRouter>) {
+  if (url.startsWith('http')) {
+    // Web — Expo Router can't handle absolute URLs; use location directly
+    if (typeof window !== 'undefined') {
+      window.location.href = url;
+    }
+  } else {
+    router.replace(url as Href);
+  }
+}
+
+export default function SignInPage() {
   useEffect(() => {
     if (Platform.OS !== 'android') return;
     void WebBrowser.warmUpAsync();
-    return () => {
-      void WebBrowser.coolDownAsync();
-    };
+    return () => { void WebBrowser.coolDownAsync(); };
   }, []);
-};
 
-WebBrowser.maybeCompleteAuthSession();
-
-export default function SignInPage() {
-  useWarmUpBrowser();
   const colors = useColors();
   const { signIn, errors, fetchStatus, isLoaded } = useSignIn();
   const { startSSOFlow } = useSSO();
@@ -31,21 +45,14 @@ export default function SignInPage() {
 
   const handleSubmit = async () => {
     if (!isLoaded) return;
-    const { error } = await signIn.password({
-      emailAddress,
-      password,
-    });
-    if (error) {
-      console.error(JSON.stringify(error, null, 2));
-      return;
-    }
+    const { error } = await signIn.password({ emailAddress, password });
+    if (error) return; // errors object updates automatically — shown in UI below
 
     if (signIn.status === 'complete') {
       await signIn.finalize({
         navigate: ({ session, decorateUrl }) => {
           if (session?.currentTask) return;
-          const url = decorateUrl('/(home)/(tabs)/');
-          router.replace(url as Href);
+          navigateAfterAuth(decorateUrl('/(home)/(tabs)/'), router);
         },
       });
     }
@@ -57,23 +64,36 @@ export default function SignInPage() {
         strategy: 'oauth_google',
         redirectUrl: AuthSession.makeRedirectUri(),
       });
-
       if (createdSessionId && setActive) {
-        setActive({
+        await setActive({
           session: createdSessionId,
-          navigate: async ({ session, decorateUrl }) => {
+          navigate: ({ session, decorateUrl }) => {
             if (session?.currentTask) return;
-            router.replace(decorateUrl('/(home)/(tabs)/') as Href);
+            navigateAfterAuth(decorateUrl('/(home)/(tabs)/'), router);
           },
         });
       }
     } catch (err) {
-      console.error(JSON.stringify(err, null, 2));
+      console.error(err);
     }
   }, [startSSOFlow, router]);
 
+  // Flatten all Clerk field errors into a single message for display
+  const errorMessage = (() => {
+    if (!errors) return null;
+    const fieldErrors = Object.values(errors.fields ?? {})
+      .map((f: any) => f?.message)
+      .filter(Boolean);
+    if (fieldErrors.length > 0) return fieldErrors.join(' · ');
+    if ((errors as any).message) return (errors as any).message;
+    return null;
+  })();
+
   return (
-    <View style={[styles.container, { backgroundColor: colors.background }]}>
+    <ScrollView
+      contentContainerStyle={[styles.container, { backgroundColor: colors.background }]}
+      keyboardShouldPersistTaps="handled"
+    >
       <View style={styles.header}>
         <View style={[styles.logoContainer, { backgroundColor: colors.primary }]}>
           <MaterialCommunityIcons name="bird" size={32} color="#FFF" />
@@ -85,28 +105,44 @@ export default function SignInPage() {
       </View>
 
       <View style={styles.form}>
+        {/* Error banner */}
+        {errorMessage ? (
+          <View style={[styles.errorBanner, { backgroundColor: '#3D1515', borderColor: colors.destructive }]}>
+            <MaterialCommunityIcons name="alert-circle-outline" size={16} color={colors.destructive} />
+            <Text style={[styles.errorText, { color: colors.destructive }]}>{errorMessage}</Text>
+          </View>
+        ) : null}
+
         <View style={styles.inputGroup}>
           <Text style={[styles.label, { color: colors.secondaryForeground }]}>Email</Text>
           <TextInput
-            style={[styles.input, { backgroundColor: colors.input, borderColor: colors.border, color: colors.foreground }]}
+            style={[
+              styles.input,
+              { backgroundColor: colors.input, borderColor: errors?.fields?.emailAddress ? colors.destructive : colors.border, color: colors.foreground },
+            ]}
             autoCapitalize="none"
             value={emailAddress}
             placeholder="name@example.com"
             placeholderTextColor={colors.mutedForeground}
             onChangeText={setEmailAddress}
             keyboardType="email-address"
+            autoComplete="email"
           />
         </View>
 
         <View style={styles.inputGroup}>
           <Text style={[styles.label, { color: colors.secondaryForeground }]}>Password</Text>
           <TextInput
-            style={[styles.input, { backgroundColor: colors.input, borderColor: colors.border, color: colors.foreground }]}
+            style={[
+              styles.input,
+              { backgroundColor: colors.input, borderColor: errors?.fields?.password ? colors.destructive : colors.border, color: colors.foreground },
+            ]}
             value={password}
             placeholder="••••••••"
             placeholderTextColor={colors.mutedForeground}
-            secureTextEntry={true}
+            secureTextEntry
             onChangeText={setPassword}
+            autoComplete="current-password"
           />
         </View>
 
@@ -120,19 +156,21 @@ export default function SignInPage() {
           onPress={handleSubmit}
           disabled={!emailAddress || !password || fetchStatus === 'fetching'}
         >
-          <Text style={[styles.buttonText, { color: colors.primaryForeground }]}>Sign In</Text>
+          <Text style={[styles.buttonText, { color: colors.primaryForeground }]}>
+            {fetchStatus === 'fetching' ? 'Signing in…' : 'Sign In'}
+          </Text>
         </Pressable>
 
         <View style={styles.divider}>
-          <View style={[styles.line, { backgroundColor: colors.border }]} />
+          <View style={[styles.dividerLine, { backgroundColor: colors.border }]} />
           <Text style={[styles.dividerText, { color: colors.mutedForeground }]}>or</Text>
-          <View style={[styles.line, { backgroundColor: colors.border }]} />
+          <View style={[styles.dividerLine, { backgroundColor: colors.border }]} />
         </View>
 
         <Pressable
           style={({ pressed }) => [
             styles.googleButton,
-            { backgroundColor: colors.card, borderColor: colors.border },
+            { borderColor: colors.border, backgroundColor: colors.card },
             pressed && { opacity: 0.8 },
           ]}
           onPress={handleGoogleSignIn}
@@ -150,19 +188,19 @@ export default function SignInPage() {
           </Pressable>
         </Link>
       </View>
-    </View>
+    </ScrollView>
   );
 }
 
 const styles = StyleSheet.create({
   container: {
-    flex: 1,
+    flexGrow: 1,
     padding: 24,
     justifyContent: 'center',
   },
   header: {
     alignItems: 'center',
-    marginBottom: 48,
+    marginBottom: 40,
   },
   logoContainer: {
     width: 64,
@@ -171,27 +209,39 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'center',
     marginBottom: 16,
-    transform: [{ rotate: '-10deg' }],
   },
   title: {
     fontSize: 28,
-    fontFamily: 'Inter_700Bold',
+    fontWeight: '700',
     marginBottom: 8,
   },
   subtitle: {
-    fontSize: 16,
-    fontFamily: 'Inter_400Regular',
+    fontSize: 15,
+    textAlign: 'center',
   },
   form: {
     gap: 16,
   },
-  inputGroup: {
+  errorBanner: {
+    flexDirection: 'row',
+    alignItems: 'center',
     gap: 8,
+    padding: 12,
+    borderRadius: 10,
+    borderWidth: 1,
+  },
+  errorText: {
+    fontSize: 14,
+    flex: 1,
+    flexWrap: 'wrap',
+  },
+  inputGroup: {
+    gap: 6,
   },
   label: {
     fontSize: 14,
-    fontFamily: 'Inter_500Medium',
-    marginLeft: 4,
+    fontWeight: '500',
+    marginLeft: 2,
   },
   input: {
     height: 52,
@@ -199,31 +249,29 @@ const styles = StyleSheet.create({
     borderRadius: 12,
     paddingHorizontal: 16,
     fontSize: 16,
-    fontFamily: 'Inter_400Regular',
   },
   button: {
     height: 52,
     borderRadius: 12,
     alignItems: 'center',
     justifyContent: 'center',
-    marginTop: 8,
+    marginTop: 4,
   },
   buttonText: {
     fontSize: 16,
-    fontFamily: 'Inter_600SemiBold',
+    fontWeight: '600',
   },
   divider: {
     flexDirection: 'row',
     alignItems: 'center',
-    marginVertical: 16,
+    gap: 12,
   },
-  line: {
+  dividerLine: {
     flex: 1,
     height: 1,
   },
   dividerText: {
-    marginHorizontal: 16,
-    fontFamily: 'Inter_500Medium',
+    fontSize: 13,
   },
   googleButton: {
     height: 52,
@@ -232,15 +280,15 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'center',
-    gap: 12,
+    gap: 10,
   },
   googleButtonText: {
     fontSize: 16,
-    fontFamily: 'Inter_600SemiBold',
+    fontWeight: '600',
   },
   footer: {
     flexDirection: 'row',
     justifyContent: 'center',
-    marginTop: 48,
+    marginTop: 40,
   },
 });
