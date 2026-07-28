@@ -1,5 +1,5 @@
 import React from 'react';
-import { Platform, StyleSheet, View } from 'react-native';
+import { Platform, View } from 'react-native';
 import { useColors } from '@/hooks/useColors';
 import { Feather } from '@expo/vector-icons';
 import { Tabs } from 'expo-router';
@@ -29,7 +29,7 @@ export default function TabLayout() {
         },
         tabBarBackground: () => (
           <View
-            style={[StyleSheet.absoluteFill, { backgroundColor: colors.background }]}
+            style={{ position: 'absolute', top: 0, left: 0, right: 0, bottom: 0, backgroundColor: colors.background }}
           />
         ),
       }}

@@ -85,7 +85,9 @@ export default function DashboardScreen() {
         renderItem={renderCode}
         contentContainerStyle={[styles.list, { paddingBottom: 100 }]}
         refreshControl={
-          <RefreshControl refreshing={codesFetching && !codesLoading} onRefresh={onRefresh} tintColor={colors.primary} />
+          Platform.OS !== 'web' ? (
+            <RefreshControl refreshing={codesFetching && !codesLoading} onRefresh={onRefresh} tintColor={colors.primary} />
+          ) : undefined
         }
         ListEmptyComponent={
           !codesLoading ? (

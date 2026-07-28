@@ -51,9 +51,13 @@ export default function RootLayout() {
           <SafeAreaProvider>
             <DeviceProvider>
               <ErrorBoundary>
-                <GestureHandlerRootView style={{ flex: 1, backgroundColor: '#0F1117' }}>
+                {Platform.OS === 'web' ? (
                   <Stack screenOptions={{ headerShown: false, contentStyle: { backgroundColor: '#0F1117' } }} />
-                </GestureHandlerRootView>
+                ) : (
+                  <GestureHandlerRootView style={{ flex: 1, backgroundColor: '#0F1117' }}>
+                    <Stack screenOptions={{ headerShown: false, contentStyle: { backgroundColor: '#0F1117' } }} />
+                  </GestureHandlerRootView>
+                )}
               </ErrorBoundary>
             </DeviceProvider>
           </SafeAreaProvider>
