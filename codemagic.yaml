@@ -18,15 +18,13 @@ workflows:
     scripts:
       - name: Install dependencies
         script: |
-          export COREPACK_ENABLE_STRICT=0
-          # pnpm v11 requires explicit build-script approval in pnpm.json
-          printf '{"onlyBuiltDependencies":["browser-tabs-lock","core-js","esbuild"]}\n' > pnpm.json
+          # Pin pnpm v9 — our lockfile is format v9.0 and v9 has no ERR_PNPM_IGNORED_BUILDS
+          npm install -g pnpm@9
           pnpm install --frozen-lockfile
 
       - name: Expo prebuild
         working_directory: artifacts/referral-robin
         script: |
-          export COREPACK_ENABLE_STRICT=0
           pnpm exec expo prebuild \
             --platform android \
             --clean \
@@ -62,14 +60,12 @@ workflows:
     scripts:
       - name: Install dependencies
         script: |
-          export COREPACK_ENABLE_STRICT=0
-          printf '{"onlyBuiltDependencies":["browser-tabs-lock","core-js","esbuild"]}\n' > pnpm.json
+          npm install -g pnpm@9
           pnpm install --frozen-lockfile
 
       - name: Expo prebuild
         working_directory: artifacts/referral-robin
         script: |
-          export COREPACK_ENABLE_STRICT=0
           pnpm exec expo prebuild \
             --platform android \
             --clean \
