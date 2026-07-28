@@ -19,8 +19,9 @@ workflows:
       - name: Install dependencies
         script: |
           export COREPACK_ENABLE_STRICT=0
-          pnpm install --frozen-lockfile --ignore-scripts
-          pnpm rebuild esbuild
+          # pnpm v11 requires explicit build-script approval in pnpm.json
+          printf '{"onlyBuiltDependencies":["browser-tabs-lock","core-js","esbuild"]}\n' > pnpm.json
+          pnpm install --frozen-lockfile
 
       - name: Expo prebuild
         working_directory: artifacts/referral-robin
@@ -62,8 +63,8 @@ workflows:
       - name: Install dependencies
         script: |
           export COREPACK_ENABLE_STRICT=0
-          pnpm install --frozen-lockfile --ignore-scripts
-          pnpm rebuild esbuild
+          printf '{"onlyBuiltDependencies":["browser-tabs-lock","core-js","esbuild"]}\n' > pnpm.json
+          pnpm install --frozen-lockfile
 
       - name: Expo prebuild
         working_directory: artifacts/referral-robin
