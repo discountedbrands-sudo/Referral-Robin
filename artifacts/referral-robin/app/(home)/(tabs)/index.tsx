@@ -112,18 +112,17 @@ export default function ExploreScreen() {
                   borderColor: colors.border,
                   opacity: pressed ? 0.85 : 1,
                 })}>
-                  {/* Logo banner */}
+                  {/* Logo */}
                   <View style={{
                     height: 90,
-                    backgroundColor: '#fff',
                     alignItems: 'center',
                     justifyContent: 'center',
-                    padding: 14,
+                    padding: 18,
                   }}>
                     {item.logoUrl && !imgErrors[item.id] ? (
                       <Image
                         source={{ uri: item.logoUrl }}
-                        style={{ width: '100%', height: '100%' }}
+                        style={{ width: 56, height: 56 }}
                         resizeMode="contain"
                         onError={() => setImgErrors(e => ({ ...e, [item.id]: true }))}
                       />
