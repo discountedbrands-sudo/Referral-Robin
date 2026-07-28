@@ -9,7 +9,7 @@ workflows:
     instance_type: mac_mini_m2
 
     environment:
-      node: 22.x
+      node: 22.14.0
       vars:
         EXPO_PUBLIC_API_URL: $EXPO_PUBLIC_API_URL         # set in Codemagic env
         EXPO_PUBLIC_CLERK_PUBLISHABLE_KEY: $EXPO_PUBLIC_CLERK_PUBLISHABLE_KEY
@@ -48,7 +48,7 @@ workflows:
     instance_type: mac_mini_m2
 
     environment:
-      node: 22.x
+      node: 22.14.0
       android_signing:
         - referral_robin_keystore       # keystore name set up in Codemagic
       vars:
