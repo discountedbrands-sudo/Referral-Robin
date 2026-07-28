@@ -6,3 +6,9 @@ id = "aOz6GkBzYp5rh8GrRLj1A"
 uri = "file://attached_assets/referral-robin-icon.svg"
 type = "image"
 title = "Referral Robin App Icon"
+
+[[outputs]]
+id = "O_azMwRk3-szETbeaUg9z"
+uri = "file://attached_assets/referral-robin-icon-v2.svg"
+type = "image"
+title = "Referral Robin Icon v2"
