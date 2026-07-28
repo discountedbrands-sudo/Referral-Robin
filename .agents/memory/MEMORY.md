@@ -1,0 +1,1 @@
+- [iOS-only package crash on web](ios-only-packages-crash.md) — expo-glass-effect, expo-symbols, expo-router/unstable-native-tabs all fail on web/Android due to missing native build files; never import at module level in shared route files.
