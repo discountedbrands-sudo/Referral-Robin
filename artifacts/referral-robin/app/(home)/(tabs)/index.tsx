@@ -17,12 +17,34 @@ export default function ExploreScreen() {
 
   const [search, setSearch] = useState('');
   const [category, setCategory] = useState('All');
+  const [viewMode, setViewMode] = useState<'grid' | 'list'>('grid');
   const [imgErrors, setImgErrors] = useState<Record<string, boolean>>({});
 
   const { data: brands = [], isLoading } = useListBrands({
     search: search.trim() || undefined,
     category: category === 'All' ? undefined : category,
   });
+
+  const Logo = ({ item }: { item: any }) => (
+    item.logoUrl && !imgErrors[item.id] ? (
+      <Image
+        source={{ uri: item.logoUrl }}
+        style={{ width: 36, height: 36 }}
+        resizeMode="contain"
+        onError={() => setImgErrors(e => ({ ...e, [item.id]: true }))}
+      />
+    ) : (
+      <View style={{
+        width: 36, height: 36, borderRadius: 8,
+        backgroundColor: colors.primary,
+        alignItems: 'center', justifyContent: 'center',
+      }}>
+        <Text style={{ color: '#fff', fontSize: 15, fontFamily: 'Inter_700Bold' }}>
+          {item.name.charAt(0)}
+        </Text>
+      </View>
+    )
+  );
 
   // Split into pairs for 2-column grid
   const rows: any[][] = [];
@@ -34,25 +56,50 @@ export default function ExploreScreen() {
     <View style={{ flex: 1, backgroundColor: colors.background }}>
       {/* Header */}
       <View style={{ paddingHorizontal: 16, paddingTop: insets.top + 16, paddingBottom: 12, gap: 12 }}>
-        {/* Search */}
-        <View style={{
-          flexDirection: 'row', alignItems: 'center', height: 48,
-          borderRadius: 14, paddingHorizontal: 14, gap: 10, borderWidth: 1,
-          backgroundColor: colors.input, borderColor: colors.border,
-        }}>
-          <Feather name="search" size={18} color={colors.mutedForeground} />
-          <TextInput
-            style={{ flex: 1, color: colors.foreground, fontSize: 15 }}
-            placeholder="Search brands..."
-            placeholderTextColor={colors.mutedForeground}
-            value={search}
-            onChangeText={setSearch}
-          />
-          {search.length > 0 && (
-            <Pressable onPress={() => setSearch('')}>
-              <Feather name="x-circle" size={18} color={colors.mutedForeground} />
-            </Pressable>
-          )}
+        {/* Search + view toggle */}
+        <View style={{ flexDirection: 'row', gap: 10 }}>
+          <View style={{
+            flex: 1, flexDirection: 'row', alignItems: 'center', height: 44,
+            borderRadius: 12, paddingHorizontal: 12, gap: 8, borderWidth: 1,
+            backgroundColor: colors.input, borderColor: colors.border,
+          }}>
+            <Feather name="search" size={16} color={colors.mutedForeground} />
+            <TextInput
+              style={{ flex: 1, color: colors.foreground, fontSize: 15 }}
+              placeholder="Search brands..."
+              placeholderTextColor={colors.mutedForeground}
+              value={search}
+              onChangeText={setSearch}
+            />
+            {search.length > 0 && (
+              <Pressable onPress={() => setSearch('')}>
+                <Feather name="x-circle" size={16} color={colors.mutedForeground} />
+              </Pressable>
+            )}
+          </View>
+
+          {/* Grid / List toggle */}
+          <View style={{
+            flexDirection: 'row', height: 44, borderRadius: 12, borderWidth: 1,
+            borderColor: colors.border, overflow: 'hidden', backgroundColor: colors.input,
+          }}>
+            {(['grid', 'list'] as const).map((mode) => (
+              <Pressable
+                key={mode}
+                onPress={() => setViewMode(mode)}
+                style={{
+                  width: 44, alignItems: 'center', justifyContent: 'center',
+                  backgroundColor: viewMode === mode ? colors.primary : 'transparent',
+                }}
+              >
+                <Feather
+                  name={mode === 'grid' ? 'grid' : 'list'}
+                  size={16}
+                  color={viewMode === mode ? '#fff' : colors.mutedForeground}
+                />
+              </Pressable>
+            ))}
+          </View>
         </View>
 
         {/* Category chips */}
@@ -68,8 +115,7 @@ export default function ExploreScreen() {
               <Pressable
                 onPress={() => setCategory(item)}
                 style={{
-                  paddingHorizontal: 16, paddingVertical: 7, borderRadius: 20,
-                  borderWidth: 1,
+                  paddingHorizontal: 14, paddingVertical: 6, borderRadius: 20, borderWidth: 1,
                   backgroundColor: sel ? colors.primary : colors.muted,
                   borderColor: sel ? colors.primary : 'transparent',
                 }}
@@ -83,8 +129,8 @@ export default function ExploreScreen() {
         />
       </View>
 
-      {/* Grid */}
-      <ScrollView contentContainerStyle={{ paddingHorizontal: 12, paddingTop: 4, paddingBottom: 120, gap: 12 }}>
+      {/* Content */}
+      <ScrollView contentContainerStyle={{ paddingHorizontal: 12, paddingTop: 4, paddingBottom: 120, gap: 10 }}>
         {isLoading && (
           <View style={{ alignItems: 'center', paddingTop: 60 }}>
             <ActivityIndicator size="large" color={colors.primary} />
@@ -99,63 +145,33 @@ export default function ExploreScreen() {
           </View>
         )}
 
-        {rows.map((row, rowIdx) => (
-          <View key={rowIdx} style={{ flexDirection: 'row', gap: 12 }}>
+        {/* ── GRID VIEW ── */}
+        {viewMode === 'grid' && rows.map((row, rowIdx) => (
+          <View key={rowIdx} style={{ flexDirection: 'row', gap: 10 }}>
             {row.map((item: any) => (
               <Link key={item.id} href={`/(home)/brand/${item.id}`} asChild>
                 <Pressable style={({ pressed }) => ({
-                  flex: 1,
-                  borderRadius: 20,
-                  overflow: 'hidden',
-                  backgroundColor: colors.card,
-                  borderWidth: 1,
-                  borderColor: colors.border,
-                  opacity: pressed ? 0.85 : 1,
+                  flex: 1, borderRadius: 16, overflow: 'hidden',
+                  backgroundColor: colors.card, borderWidth: 1, borderColor: colors.border,
+                  opacity: pressed ? 0.82 : 1,
+                  padding: 14, gap: 10,
                 })}>
-                  {/* Logo */}
-                  <View style={{
-                    height: 90,
-                    alignItems: 'center',
-                    justifyContent: 'center',
-                    padding: 18,
-                  }}>
-                    {item.logoUrl && !imgErrors[item.id] ? (
-                      <Image
-                        source={{ uri: item.logoUrl }}
-                        style={{ width: 56, height: 56 }}
-                        resizeMode="contain"
-                        onError={() => setImgErrors(e => ({ ...e, [item.id]: true }))}
-                      />
-                    ) : (
-                      <View style={{
-                        width: 52, height: 52, borderRadius: 14,
-                        backgroundColor: colors.primary,
-                        alignItems: 'center', justifyContent: 'center',
-                      }}>
-                        <Text style={{ color: '#fff', fontSize: 22, fontFamily: 'Inter_700Bold' }}>
-                          {item.name.charAt(0)}
-                        </Text>
-                      </View>
-                    )}
-                  </View>
+                  {/* Logo — fixed 36×36 uniform */}
+                  <Logo item={item} />
 
-                  {/* Info */}
-                  <View style={{ padding: 12, gap: 4 }}>
-                    <Text style={{ fontSize: 15, fontFamily: 'Inter_600SemiBold', color: colors.foreground }} numberOfLines={1}>
+                  <View style={{ gap: 3 }}>
+                    <Text style={{ fontSize: 14, fontFamily: 'Inter_600SemiBold', color: colors.foreground }} numberOfLines={1}>
                       {item.name}
                     </Text>
 
                     {item.currentOffer ? (
-                      <View style={{ flexDirection: 'row', alignItems: 'flex-start', gap: 5 }}>
-                        <MaterialCommunityIcons name="gift-outline" size={13} color={colors.accent} style={{ marginTop: 1 }} />
-                        <Text style={{ fontSize: 12, color: colors.accent, fontFamily: 'Inter_500Medium', flex: 1, lineHeight: 17 }} numberOfLines={2}>
-                          {item.currentOffer}
-                        </Text>
-                      </View>
+                      <Text style={{ fontSize: 11, color: colors.accent, fontFamily: 'Inter_400Regular', lineHeight: 15 }} numberOfLines={2}>
+                        {item.currentOffer}
+                      </Text>
                     ) : null}
 
                     <Text style={{ fontSize: 11, color: colors.mutedForeground, fontFamily: 'Inter_400Regular', marginTop: 2 }}>
-                      {item.codeCount} code{item.codeCount !== 1 ? 's' : ''} available
+                      {item.codeCount} code{item.codeCount !== 1 ? 's' : ''}
                     </Text>
                   </View>
                 </Pressable>
@@ -163,6 +179,40 @@ export default function ExploreScreen() {
             ))}
             {row.length === 1 && <View style={{ flex: 1 }} />}
           </View>
+        ))}
+
+        {/* ── LIST VIEW ── */}
+        {viewMode === 'list' && brands.map((item: any) => (
+          <Link key={item.id} href={`/(home)/brand/${item.id}`} asChild>
+            <Pressable style={({ pressed }) => ({
+              flexDirection: 'row', alignItems: 'center', gap: 14,
+              borderRadius: 14, backgroundColor: colors.card,
+              borderWidth: 1, borderColor: colors.border,
+              paddingHorizontal: 14, paddingVertical: 12,
+              opacity: pressed ? 0.82 : 1,
+            })}>
+              {/* Logo — same 36×36 */}
+              <Logo item={item} />
+
+              <View style={{ flex: 1, gap: 2 }}>
+                <Text style={{ fontSize: 15, fontFamily: 'Inter_600SemiBold', color: colors.foreground }} numberOfLines={1}>
+                  {item.name}
+                </Text>
+                {item.currentOffer ? (
+                  <Text style={{ fontSize: 12, color: colors.accent, fontFamily: 'Inter_400Regular' }} numberOfLines={1}>
+                    {item.currentOffer}
+                  </Text>
+                ) : null}
+              </View>
+
+              <View style={{ alignItems: 'flex-end', gap: 4 }}>
+                <Text style={{ fontSize: 12, color: colors.mutedForeground, fontFamily: 'Inter_400Regular' }}>
+                  {item.codeCount} code{item.codeCount !== 1 ? 's' : ''}
+                </Text>
+                <Feather name="chevron-right" size={14} color={colors.mutedForeground} />
+              </View>
+            </Pressable>
+          </Link>
         ))}
       </ScrollView>
 
