@@ -11,9 +11,8 @@ workflows:
 
     environment:
       node: 22.14.0
-      vars:
-        EXPO_PUBLIC_API_URL: $EXPO_PUBLIC_API_URL
-        EXPO_PUBLIC_CLERK_PUBLISHABLE_KEY: $EXPO_PUBLIC_CLERK_PUBLISHABLE_KEY
+      groups:
+        - RR
 
     scripts:
       - name: Install dependencies
@@ -71,9 +70,8 @@ workflows:
       node: 22.14.0
       android_signing:
         - referral_robin_keystore
-      vars:
-        EXPO_PUBLIC_API_URL: $EXPO_PUBLIC_API_URL
-        EXPO_PUBLIC_CLERK_PUBLISHABLE_KEY: $EXPO_PUBLIC_CLERK_PUBLISHABLE_KEY
+      groups:
+        - RR
 
     scripts:
       - name: Install dependencies
