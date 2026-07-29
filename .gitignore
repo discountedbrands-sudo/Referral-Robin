@@ -47,3 +47,6 @@ Thumbs.db
 # Replit
 .cache/
 .local/
+
+# Personal local dev launcher (machine-specific paths)
+dev.local.ps1
