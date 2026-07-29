@@ -25,6 +25,7 @@ workflows:
         working_directory: artifacts/referral-robin
         script: |
           export COREPACK_ENABLE_STRICT=0
+          export NODE_ENV=production
           pnpm exec expo prebuild --platform android --clean --no-install
 
       - name: Patch build.gradle packaging
@@ -84,6 +85,7 @@ workflows:
         working_directory: artifacts/referral-robin
         script: |
           export COREPACK_ENABLE_STRICT=0
+          export NODE_ENV=production
           pnpm exec expo prebuild --platform android --clean --no-install
 
       - name: Patch build.gradle packaging

@@ -67,7 +67,8 @@
         "@solana-mobile/mobile-wallet-adapter-protocol",
         "@solana-mobile/mobile-wallet-adapter-protocol-web3js",
         "@solana-mobile/wallet-standard-mobile",
-        "@solana-mobile/wallet-adapter-mobile"
+        "@solana-mobile/wallet-adapter-mobile",
+        "react-native-keyboard-controller"
       ]
     }
   }
