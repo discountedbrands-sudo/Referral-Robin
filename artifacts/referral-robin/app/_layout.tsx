@@ -20,7 +20,10 @@ const domain = process.env.EXPO_PUBLIC_DOMAIN;
 if (apiUrl) setBaseUrl(apiUrl);
 else if (domain) setBaseUrl(`https://${domain}`);
 
-const publishableKey = process.env.EXPO_PUBLIC_CLERK_PUBLISHABLE_KEY || '';
+// Guard: Clerk publishable keys always start with "pk_". If the env var is
+// missing or Codemagic left the placeholder unexpanded, skip ClerkProvider.
+const rawKey = process.env.EXPO_PUBLIC_CLERK_PUBLISHABLE_KEY || '';
+const publishableKey = rawKey.startsWith('pk_') ? rawKey : '';
 const proxyUrl = process.env.EXPO_PUBLIC_CLERK_PROXY_URL || undefined;
 
 function AppShell() {
