@@ -60,5 +60,15 @@
   },
   "dependencies": {
     "expo-clipboard": "^8.0.8"
+  },
+  "expo": {
+    "autolinking": {
+      "exclude": [
+        "@solana-mobile/mobile-wallet-adapter-protocol",
+        "@solana-mobile/mobile-wallet-adapter-protocol-web3js",
+        "@solana-mobile/wallet-standard-mobile",
+        "@solana-mobile/wallet-adapter-mobile"
+      ]
+    }
   }
 }
