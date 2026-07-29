@@ -236,7 +236,6 @@ const styles = StyleSheet.create({
   },
   headerTitle: {
     fontSize: 20,
-   ,
   },
   content: {
     flex: 1,
@@ -254,11 +253,9 @@ const styles = StyleSheet.create({
   },
   offerTitle: {
     fontSize: 18,
-   ,
   },
   offerText: {
     fontSize: 16,
-   ,
     textAlign: 'center',
   },
   actionSection: {
@@ -276,7 +273,6 @@ const styles = StyleSheet.create({
   infoText: {
     flex: 1,
     fontSize: 14,
-   ,
     lineHeight: 20,
   },
   mainButton: {
@@ -292,7 +288,6 @@ const styles = StyleSheet.create({
   },
   mainButtonText: {
     fontSize: 18,
-   ,
   },
   revealSection: {
     gap: 24,
@@ -308,11 +303,9 @@ const styles = StyleSheet.create({
   },
   codeLabel: {
     fontSize: 14,
-   ,
   },
   revealedCodeText: {
     fontSize: 32,
-   ,
     letterSpacing: 2,
     textAlign: 'center',
   },
@@ -327,7 +320,6 @@ const styles = StyleSheet.create({
   },
   copyButtonText: {
     fontSize: 16,
-   ,
   },
   reportButton: {
     flexDirection: 'row',
@@ -338,6 +330,5 @@ const styles = StyleSheet.create({
   },
   reportText: {
     fontSize: 14,
-   ,
   },
 });

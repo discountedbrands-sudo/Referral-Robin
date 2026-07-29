@@ -120,7 +120,6 @@ const styles = StyleSheet.create({
   },
   title: {
     fontSize: 24,
-   ,
   },
   overallStats: {
     flexDirection: 'row',
@@ -138,11 +137,9 @@ const styles = StyleSheet.create({
   },
   overallStatNumber: {
     fontSize: 24,
-   ,
   },
   overallStatLabel: {
     fontSize: 13,
-   ,
   },
   list: {
     padding: 16,
@@ -161,7 +158,6 @@ const styles = StyleSheet.create({
   },
   brandName: {
     fontSize: 18,
-   ,
   },
   statusBadge: {
     paddingHorizontal: 8,
@@ -170,7 +166,6 @@ const styles = StyleSheet.create({
   },
   statusText: {
     fontSize: 12,
-   ,
   },
   codeBox: {
     flexDirection: 'row',
@@ -181,7 +176,6 @@ const styles = StyleSheet.create({
   },
   codeText: {
     fontSize: 16,
-   ,
     letterSpacing: 2,
   },
   statsRow: {
@@ -195,7 +189,6 @@ const styles = StyleSheet.create({
   },
   statValue: {
     fontSize: 14,
-   ,
   },
   emptyState: {
     alignItems: 'center',
@@ -206,11 +199,9 @@ const styles = StyleSheet.create({
   },
   emptyTitle: {
     fontSize: 20,
-   ,
   },
   emptyDesc: {
     fontSize: 15,
-   ,
     textAlign: 'center',
     marginBottom: 16,
   },
@@ -221,6 +212,5 @@ const styles = StyleSheet.create({
   },
   submitButtonText: {
     fontSize: 16,
-   ,
   },
 });
