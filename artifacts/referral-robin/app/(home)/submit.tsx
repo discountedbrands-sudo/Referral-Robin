@@ -173,7 +173,7 @@ export default function SubmitScreen() {
             <TextInput
               style={{
                 height: 52, borderWidth: 1, borderRadius: 12, paddingHorizontal: 16,
-                fontSize: 16,,
+                fontSize: 16,
                 backgroundColor: colors.input, borderColor: colors.border, color: colors.foreground,
               }}
               placeholder="e.g. ROBIN25"
@@ -228,7 +228,7 @@ export default function SubmitScreen() {
                 <TextInput
                   style={{
                     height: 52, borderWidth: 1, borderRadius: 12, paddingHorizontal: 16,
-                    fontSize: 16,,
+                    fontSize: 16,
                     backgroundColor: colors.input,
                     borderColor: expiryError ? '#ef4444' : colors.border,
                     color: colors.foreground,
