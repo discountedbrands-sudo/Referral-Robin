@@ -25,25 +25,41 @@ export default function ExploreScreen() {
     category: category === 'All' ? undefined : category,
   });
 
+  // Fixed-size backing box for every logo — real logo images vary wildly in
+  // built-in padding/background (some are full-bleed colour squares, some
+  // are transparent marks), so without a uniform container behind them the
+  // grid reads as uneven even though each <Image> itself is capped at the
+  // same size. A consistent light backing (logos are designed for it) plus
+  // resizeMode="contain" keeps every mark the same footprint without
+  // stretching or cropping.
+  const LOGO_BOX = 44;
+
   const Logo = ({ item }: { item: any }) => (
-    item.logoUrl && !imgErrors[item.id] ? (
-      <Image
-        source={{ uri: item.logoUrl }}
-        style={{ width: 36, height: 36 }}
-        resizeMode="contain"
-        onError={() => setImgErrors(e => ({ ...e, [item.id]: true }))}
-      />
-    ) : (
-      <View style={{
-        width: 36, height: 36, borderRadius: 8,
-        backgroundColor: colors.primary,
-        alignItems: 'center', justifyContent: 'center',
-      }}>
-        <Text style={{ color: '#fff', fontSize: 15, }}>
-          {item.name.charAt(0)}
-        </Text>
-      </View>
-    )
+    <View style={{
+      width: LOGO_BOX, height: LOGO_BOX, borderRadius: 10,
+      backgroundColor: '#FFFFFF',
+      alignItems: 'center', justifyContent: 'center',
+      overflow: 'hidden',
+    }}>
+      {item.logoUrl && !imgErrors[item.id] ? (
+        <Image
+          source={{ uri: item.logoUrl }}
+          style={{ width: LOGO_BOX - 10, height: LOGO_BOX - 10 }}
+          resizeMode="contain"
+          onError={() => setImgErrors(e => ({ ...e, [item.id]: true }))}
+        />
+      ) : (
+        <View style={{
+          width: '100%', height: '100%',
+          backgroundColor: colors.primary,
+          alignItems: 'center', justifyContent: 'center',
+        }}>
+          <Text style={{ color: '#fff', fontSize: 17, fontWeight: '600' }}>
+            {item.name.charAt(0)}
+          </Text>
+        </View>
+      )}
+    </View>
   );
 
   // Split into pairs for 2-column grid
@@ -151,12 +167,12 @@ export default function ExploreScreen() {
             {row.map((item: any) => (
               <Link key={item.id} href={`/(home)/brand/${item.id}`} asChild>
                 <Pressable style={({ pressed }) => ({
-                  flex: 1, borderRadius: 16, overflow: 'hidden',
+                  flex: 1, height: 158, borderRadius: 16, overflow: 'hidden',
                   backgroundColor: colors.card, borderWidth: 1, borderColor: colors.border,
                   opacity: pressed ? 0.82 : 1,
                   padding: 14, gap: 10,
                 })}>
-                  {/* Logo — fixed 36×36 uniform */}
+                  {/* Logo — fixed 44×44 uniform, white-backed */}
                   <Logo item={item} />
 
                   <View style={{ gap: 3 }}>
@@ -164,13 +180,16 @@ export default function ExploreScreen() {
                       {item.name}
                     </Text>
 
-                    {item.currentOffer ? (
-                      <Text style={{ fontSize: 11, color: colors.accent, lineHeight: 15 }} numberOfLines={2}>
-                        {item.currentOffer}
-                      </Text>
-                    ) : null}
+                    {/* Fixed 2-line height (reserved even when empty) so
+                        offer text of any length never shifts card height */}
+                    <Text
+                      style={{ fontSize: 11, color: colors.accent, lineHeight: 15, height: 30 }}
+                      numberOfLines={2}
+                    >
+                      {item.currentOffer || ''}
+                    </Text>
 
-                    <Text style={{ fontSize: 11, color: colors.mutedForeground, marginTop: 2 }}>
+                    <Text style={{ fontSize: 11, color: colors.mutedForeground, marginTop: 2 }} numberOfLines={1}>
                       {item.codeCount} code{item.codeCount !== 1 ? 's' : ''}
                     </Text>
                   </View>
