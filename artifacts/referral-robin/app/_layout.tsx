@@ -6,9 +6,9 @@ import { SafeAreaProvider } from 'react-native-safe-area-context';
 import { ErrorBoundary } from '@/components/ErrorBoundary';
 import { Stack } from 'expo-router';
 import * as SplashScreen from 'expo-splash-screen';
-import { ClerkProvider } from '@clerk/expo';
+import { ClerkProvider, useAuth } from '@clerk/expo';
 import { tokenCache } from '@clerk/expo/token-cache';
-import { setBaseUrl } from '@workspace/api-client-react';
+import { setBaseUrl, setAuthTokenGetter } from '@workspace/api-client-react';
 import { DeviceProvider } from '@/context/DeviceContext';
 
 SplashScreen.preventAutoHideAsync();
@@ -25,6 +25,20 @@ else if (domain) setBaseUrl(`https://${domain}`);
 const rawKey = process.env.EXPO_PUBLIC_CLERK_PUBLISHABLE_KEY || '';
 const publishableKey = rawKey.startsWith('pk_') ? rawKey : '';
 const proxyUrl = process.env.EXPO_PUBLIC_CLERK_PROXY_URL || undefined;
+
+// Registers Clerk's session token with the API client so every request
+// carries `Authorization: Bearer <token>`. Only mounted inside ClerkProvider
+// (see RootLayout) — useAuth() throws without one.
+function ApiAuthSync() {
+  const { getToken } = useAuth();
+
+  useEffect(() => {
+    setAuthTokenGetter(getToken);
+    return () => setAuthTokenGetter(null);
+  }, [getToken]);
+
+  return null;
+}
 
 function AppShell() {
   return (
@@ -57,6 +71,7 @@ export default function RootLayout() {
 
   return (
     <ClerkProvider publishableKey={publishableKey} tokenCache={tokenCache} proxyUrl={proxyUrl}>
+      <ApiAuthSync />
       <AppShell />
     </ClerkProvider>
   );
