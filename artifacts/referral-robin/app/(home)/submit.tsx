@@ -10,23 +10,7 @@ import { useListBrands, useSubmitCode, getGetUserCodesQueryKey, getGetUserStatsQ
 import { Feather } from '@expo/vector-icons';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import * as Haptics from 'expo-haptics';
-
-/** Parse DD/MM/YYYY → ISO 8601 date string (end of that day UTC), or null on bad input */
-function parseDateInput(raw: string): string | null {
-  const trimmed = raw.trim();
-  // Accept DD/MM/YYYY or DD-MM-YYYY
-  const match = trimmed.match(/^(\d{1,2})[\/\-](\d{1,2})[\/\-](\d{4})$/);
-  if (!match) return null;
-  const [, d, m, y] = match;
-  const date = new Date(Date.UTC(Number(y), Number(m) - 1, Number(d), 23, 59, 59));
-  if (
-    isNaN(date.getTime()) ||
-    date.getUTCDate() !== Number(d) ||
-    date.getUTCMonth() !== Number(m) - 1
-  ) return null;
-  if (date <= new Date()) return null; // must be in the future
-  return date.toISOString();
-}
+import { parseDateInput } from '@/utils/parseDateInput';
 
 export default function SubmitScreen() {
   const colors = useColors();

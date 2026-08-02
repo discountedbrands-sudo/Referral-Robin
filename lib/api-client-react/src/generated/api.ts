@@ -32,6 +32,7 @@ import type {
   NextCodeInput,
   ReportInput,
   SuccessResult,
+  UpdateCodeInput,
   UserCode,
   UserStats
 } from './api.schemas';
@@ -514,6 +515,78 @@ export const useSubmitCode = <TError = ErrorType<void>,
         TContext
       > => {
       return useMutation(getSubmitCodeMutationOptions(options));
+    }
+
+export const getUpdateCodeUrl = (codeId: number,) => {
+
+
+
+
+  return `/api/codes/${codeId}`
+}
+
+/**
+ * @summary Edit a code you own (e.g. fix a typo or update the offer)
+ */
+export const updateCode = async (codeId: number,
+    updateCodeInput: UpdateCodeInput, options?: Parameters<typeof customFetch>[1]): Promise<UserCode> => {
+
+  return customFetch<UserCode>(getUpdateCodeUrl(codeId),
+  {
+    ...options,
+    method: 'PATCH',
+    headers: { 'Content-Type': 'application/json', ...options?.headers },
+    body: JSON.stringify(updateCodeInput)
+  }
+);}
+
+
+
+
+
+export const getUpdateCodeMutationOptions = <TError = ErrorType<void>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof updateCode>>, TError,{codeId: number;data: BodyType<UpdateCodeInput>}, TContext>, request?: SecondParameter<typeof customFetch>}
+): UseMutationOptions<Awaited<ReturnType<typeof updateCode>>, TError,{codeId: number;data: BodyType<UpdateCodeInput>}, TContext> => {
+
+const mutationKey = ['updateCode'];
+const {mutation: mutationOptions, request: requestOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }, request: undefined};
+
+
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof updateCode>>, {codeId: number;data: BodyType<UpdateCodeInput>}> = (props) => {
+          const {codeId,data} = props ?? {};
+
+          return  updateCode(codeId,data,requestOptions)
+        }
+
+
+
+
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type UpdateCodeMutationResult = NonNullable<Awaited<ReturnType<typeof updateCode>>>
+    export type UpdateCodeMutationBody = BodyType<UpdateCodeInput>
+    export type UpdateCodeMutationError = ErrorType<void>
+
+    /**
+ * @summary Edit a code you own (e.g. fix a typo or update the offer)
+ */
+export const useUpdateCode = <TError = ErrorType<void>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof updateCode>>, TError,{codeId: number;data: BodyType<UpdateCodeInput>}, TContext>, request?: SecondParameter<typeof customFetch>}
+ ): UseMutationResult<
+        Awaited<ReturnType<typeof updateCode>>,
+        TError,
+        {codeId: number;data: BodyType<UpdateCodeInput>},
+        TContext
+      > => {
+      return useMutation(getUpdateCodeMutationOptions(options));
     }
 
 export const getReportCodeUrl = (codeId: number,) => {

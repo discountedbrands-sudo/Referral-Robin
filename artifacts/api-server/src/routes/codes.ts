@@ -5,6 +5,8 @@ import {
   GetNextCodeBody,
   ConfirmCopyBody,
   SubmitCodeBody,
+  UpdateCodeParams,
+  UpdateCodeBody,
   ReportCodeParams,
   ReportCodeBody,
 } from "@workspace/api-zod";
@@ -203,6 +205,70 @@ router.post(
       timesCopied: newCode.timesCopied,
       createdAt: newCode.createdAt,
       expiresAt: newCode.expiresAt ?? null,
+    });
+  },
+);
+
+// PATCH /codes/:codeId — authenticated: edit a code you own
+router.patch(
+  "/codes/:codeId",
+  requireAuth,
+  async (req: Request & { userId?: string }, res): Promise<void> => {
+    const params = UpdateCodeParams.safeParse(req.params);
+    if (!params.success) {
+      res.status(400).json({ error: params.error.message });
+      return;
+    }
+
+    const body = UpdateCodeBody.safeParse(req.body);
+    if (!body.success) {
+      res.status(400).json({ error: body.error.message });
+      return;
+    }
+
+    const { codeId } = params.data;
+    const userId = req.userId!;
+
+    const [codeRow] = await db
+      .select()
+      .from(codesTable)
+      .where(eq(codesTable.id, codeId));
+
+    if (!codeRow) {
+      res.status(404).json({ error: "Code not found" });
+      return;
+    }
+
+    if (codeRow.ownerId !== userId) {
+      res.status(403).json({ error: "You don't own this code" });
+      return;
+    }
+
+    const updates: { code?: string; expiresAt?: Date | null } = {};
+    if (body.data.code !== undefined) updates.code = body.data.code;
+    if (body.data.expiresAt !== undefined) updates.expiresAt = body.data.expiresAt;
+
+    const [updated] = await db
+      .update(codesTable)
+      .set(updates)
+      .where(eq(codesTable.id, codeId))
+      .returning();
+
+    const [brand] = await db
+      .select()
+      .from(brandsTable)
+      .where(eq(brandsTable.id, updated.brandId));
+
+    res.json({
+      id: updated.id,
+      brandId: updated.brandId,
+      brandName: brand?.name ?? "",
+      code: updated.code,
+      status: updated.status,
+      timesServed: updated.timesServed,
+      timesCopied: updated.timesCopied,
+      createdAt: updated.createdAt,
+      expiresAt: updated.expiresAt ?? null,
     });
   },
 );

@@ -55,6 +55,16 @@ export interface CodeInput {
   expiresAt?: string | null;
 }
 
+export interface UpdateCodeInput {
+  /** @minLength 1 */
+  code?: string;
+  /**
+     * Optional expiry date for this code (ISO 8601)
+     * @nullable
+     */
+  expiresAt?: string | null;
+}
+
 export interface ReportInput {
   deviceId: string;
 }

@@ -115,6 +115,34 @@ export const SubmitCodeResponse = zod.object({
 
 
 /**
+ * @summary Edit a code you own (e.g. fix a typo or update the offer)
+ */
+export const UpdateCodeParams = zod.object({
+  "codeId": zod.coerce.number()
+})
+
+
+
+
+export const UpdateCodeBody = zod.object({
+  "code": zod.string().min(1).optional(),
+  "expiresAt": zod.coerce.date().nullish().describe('Optional expiry date for this code (ISO 8601)')
+})
+
+export const UpdateCodeResponse = zod.object({
+  "id": zod.number(),
+  "brandId": zod.number(),
+  "brandName": zod.string(),
+  "code": zod.string(),
+  "status": zod.enum(['active', 'paused', 'removed']),
+  "timesServed": zod.number(),
+  "timesCopied": zod.number(),
+  "createdAt": zod.coerce.date(),
+  "expiresAt": zod.coerce.date().nullish()
+})
+
+
+/**
  * @summary Report a dead or invalid code
  */
 export const ReportCodeParams = zod.object({

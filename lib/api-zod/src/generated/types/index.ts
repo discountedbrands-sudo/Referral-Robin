@@ -18,6 +18,7 @@ export * from './listBrandsParams';
 export * from './nextCodeInput';
 export * from './reportInput';
 export * from './successResult';
+export * from './updateCodeInput';
 export * from './userCode';
 export * from './userCodeStatus';
 export * from './userStats';

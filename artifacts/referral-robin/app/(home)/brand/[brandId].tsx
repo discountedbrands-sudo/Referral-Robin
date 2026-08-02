@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { View, Text, StyleSheet, Pressable, ActivityIndicator, Alert } from 'react-native';
 import { useLocalSearchParams, useRouter } from 'expo-router';
 import { useColors } from '@/hooks/useColors';
-import { useGetBrand, useGetCooldown, useGetNextCode, useConfirmCopy, useReportCode } from '@workspace/api-client-react';
+import { useGetBrand, useGetCooldown, useGetNextCode, useConfirmCopy, useReportCode, getGetBrandQueryKey, getGetCooldownQueryKey } from '@workspace/api-client-react';
 import { Feather, MaterialCommunityIcons } from '@expo/vector-icons';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useDevice } from '@/context/DeviceContext';
@@ -21,11 +21,11 @@ export default function BrandRevealScreen() {
   const [copied, setCopied] = useState(false);
 
   // Queries
-  const { data: brand, isLoading: isBrandLoading } = useGetBrand(id, { query: { enabled: !!id } });
-  
+  const { data: brand, isLoading: isBrandLoading } = useGetBrand(id, { query: { queryKey: getGetBrandQueryKey(id), enabled: !!id } });
+
   const { data: cooldownData, refetch: refetchCooldown } = useGetCooldown(
     { brandId: id, deviceId: deviceId || '' },
-    { query: { enabled: !!id && !!deviceId } }
+    { query: { queryKey: getGetCooldownQueryKey({ brandId: id, deviceId: deviceId || '' }), enabled: !!id && !!deviceId } }
   );
 
   // Mutations
