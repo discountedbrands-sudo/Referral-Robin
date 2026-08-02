@@ -4,8 +4,9 @@ import {
   Alert, Switch, Platform,
 } from 'react-native';
 import { useRouter } from 'expo-router';
+import { useQueryClient } from '@tanstack/react-query';
 import { useColors } from '@/hooks/useColors';
-import { useListBrands, useSubmitCode } from '@workspace/api-client-react';
+import { useListBrands, useSubmitCode, getGetUserCodesQueryKey, getGetUserStatsQueryKey } from '@workspace/api-client-react';
 import { Feather } from '@expo/vector-icons';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import * as Haptics from 'expo-haptics';
@@ -40,6 +41,7 @@ export default function SubmitScreen() {
   const [expiryError, setExpiryError] = useState('');
 
   const { data: brands = [] } = useListBrands({ search: search.trim() || undefined });
+  const queryClient = useQueryClient();
   const submitCode = useSubmitCode();
 
   const resetForm = () => {
@@ -76,6 +78,8 @@ export default function SubmitScreen() {
       { data: { brandId: selectedBrand.id, code: code.trim(), expiresAt: expiresAt ?? null } },
       {
         onSuccess: () => {
+          queryClient.invalidateQueries({ queryKey: getGetUserCodesQueryKey() });
+          queryClient.invalidateQueries({ queryKey: getGetUserStatsQueryKey() });
           if (Platform.OS !== 'web') {
             Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
           }
