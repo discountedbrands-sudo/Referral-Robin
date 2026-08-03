@@ -6,7 +6,7 @@ import {
 import { useColors } from '@/hooks/useColors';
 import { useListBrands } from '@workspace/api-client-react';
 import { Feather, MaterialCommunityIcons } from '@expo/vector-icons';
-import { Link } from 'expo-router';
+import { Link, useRouter } from 'expo-router';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 const CATEGORIES = ['All', 'Fintech', 'Investing', 'Crypto', 'Banking'];
@@ -14,6 +14,7 @@ const CATEGORIES = ['All', 'Fintech', 'Investing', 'Crypto', 'Banking'];
 export default function ExploreScreen() {
   const colors = useColors();
   const insets = useSafeAreaInsets();
+  const router = useRouter();
 
   const [search, setSearch] = useState('');
   const [category, setCategory] = useState('All');
@@ -67,6 +68,63 @@ export default function ExploreScreen() {
   for (let i = 0; i < brands.length; i += 2) {
     rows.push(brands.slice(i, i + 2));
   }
+
+  const GRID_CARD_HEIGHT = 172;
+
+  // A real, visibly-distinct tile. Two things that *don't* work on this
+  // near-black palette: colors.card (#1A1D26) is only ~6/255 lighter than
+  // colors.background (#0F1117) — a flat 1px border in that same tonal
+  // range barely registers — and a drop shadow can't visibly darken
+  // something that's already near-black, so shadow/elevation added no
+  // depth cue either. What actually reads as a tile: colors.muted
+  // (#262932, already proven visible elsewhere in this screen as the
+  // unselected category-chip fill) for real lightness contrast, plus a
+  // semi-transparent white border, which stays visible regardless of the
+  // exact fill tone instead of depending on two adjacent dark hex values.
+  // NOTE: deliberately not <Link asChild><Pressable style={fn}>> — on this
+  // RN/expo-router version, Link's asChild cloning silently drops a
+  // function-typed style prop on its child (confirmed earlier debugging a
+  // near-identical bug on the Account screen's "My Codes" row), so the
+  // container never got a background/border no matter what values were set.
+  // A plain Pressable + router.push sidesteps that entirely.
+  const GridCard = ({ item }: { item: any }) => (
+    <Pressable
+      onPress={() => router.push(`/(home)/brand/${item.id}`)}
+      style={({ pressed }) => ({
+        flex: 1,
+        height: GRID_CARD_HEIGHT,
+        borderRadius: 16,
+        backgroundColor: colors.muted,
+        borderWidth: 1,
+        borderColor: 'rgba(255,255,255,0.10)',
+        padding: 14,
+        opacity: pressed ? 0.82 : 1,
+      })}
+    >
+      {/* Logo — centered, fixed size */}
+      <View style={{ alignItems: 'center', marginBottom: 10 }}>
+        <Logo item={item} />
+      </View>
+
+      {/* Name + offer up top, code count pinned to the card's bottom edge
+          via flex — height stays identical across every card regardless
+          of whether the offer text is short, long, or missing. */}
+      <View style={{ flex: 1, justifyContent: 'space-between' }}>
+        <View style={{ gap: 3 }}>
+          <Text style={{ fontSize: 14, color: colors.foreground, fontWeight: '600' }} numberOfLines={1}>
+            {item.name}
+          </Text>
+          <Text style={{ fontSize: 11, color: colors.accent }} numberOfLines={1}>
+            {item.currentOffer || ' '}
+          </Text>
+        </View>
+
+        <Text style={{ fontSize: 11, color: colors.mutedForeground }} numberOfLines={1}>
+          {item.codeCount} code{item.codeCount !== 1 ? 's' : ''}
+        </Text>
+      </View>
+    </Pressable>
+  );
 
   return (
     <View style={{ flex: 1, backgroundColor: colors.background }}>
@@ -165,36 +223,7 @@ export default function ExploreScreen() {
         {viewMode === 'grid' && rows.map((row, rowIdx) => (
           <View key={rowIdx} style={{ flexDirection: 'row', gap: 10 }}>
             {row.map((item: any) => (
-              <Link key={item.id} href={`/(home)/brand/${item.id}`} asChild>
-                <Pressable style={({ pressed }) => ({
-                  flex: 1, height: 158, borderRadius: 16, overflow: 'hidden',
-                  backgroundColor: colors.card, borderWidth: 1, borderColor: colors.border,
-                  opacity: pressed ? 0.82 : 1,
-                  padding: 14, gap: 10,
-                })}>
-                  {/* Logo — fixed 44×44 uniform, white-backed */}
-                  <Logo item={item} />
-
-                  <View style={{ gap: 3 }}>
-                    <Text style={{ fontSize: 14, color: colors.foreground }} numberOfLines={1}>
-                      {item.name}
-                    </Text>
-
-                    {/* Fixed 2-line height (reserved even when empty) so
-                        offer text of any length never shifts card height */}
-                    <Text
-                      style={{ fontSize: 11, color: colors.accent, lineHeight: 15, height: 30 }}
-                      numberOfLines={2}
-                    >
-                      {item.currentOffer || ''}
-                    </Text>
-
-                    <Text style={{ fontSize: 11, color: colors.mutedForeground, marginTop: 2 }} numberOfLines={1}>
-                      {item.codeCount} code{item.codeCount !== 1 ? 's' : ''}
-                    </Text>
-                  </View>
-                </Pressable>
-              </Link>
+              <GridCard key={item.id} item={item} />
             ))}
             {row.length === 1 && <View style={{ flex: 1 }} />}
           </View>
