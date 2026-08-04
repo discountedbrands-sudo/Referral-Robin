@@ -7,8 +7,17 @@ import { Feather, MaterialCommunityIcons } from '@expo/vector-icons';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { Link } from 'expo-router';
 import { parseDateInput, formatDateInput } from '@/utils/parseDateInput';
+import { AuthGate } from '@/components/AuthGate';
 
 export default function DashboardScreen() {
+  return (
+    <AuthGate whenSignedOut="/(auth)/sign-in">
+      <DashboardScreenInner />
+    </AuthGate>
+  );
+}
+
+function DashboardScreenInner() {
   const colors = useColors();
   const insets = useSafeAreaInsets();
   const queryClient = useQueryClient();

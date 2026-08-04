@@ -1,10 +1,8 @@
 import { Stack } from 'expo-router';
-import { AuthGate } from '@/components/AuthGate';
 
+// Browsing (Explore, brand detail) is public — only screens that touch a
+// signed-in user's own data (dashboard, account, submit) gate themselves
+// individually via AuthGate. See app/(home)/(tabs)/dashboard.tsx etc.
 export default function HomeLayout() {
-  return (
-    <AuthGate whenSignedOut="/(auth)/sign-in">
-      <Stack screenOptions={{ headerShown: false, contentStyle: { backgroundColor: '#0F1117' } }} />
-    </AuthGate>
-  );
+  return <Stack screenOptions={{ headerShown: false, contentStyle: { backgroundColor: '#0F1117' } }} />;
 }

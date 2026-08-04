@@ -189,7 +189,7 @@ export function LandingScreen() {
                 >
                   <Text style={{ color: '#fff', fontSize: 16, fontWeight: '700' }}>Sign up free</Text>
                 </Pressable>
-                <Pressable onPress={scrollToGrid} style={{ alignItems: 'center', paddingVertical: 10, paddingHorizontal: isWide ? 12 : 0 }}>
+                <Pressable onPress={() => router.push('/(home)/(tabs)')} style={{ alignItems: 'center', paddingVertical: 10, paddingHorizontal: isWide ? 12 : 0 }}>
                   <Text style={{ color: colors.accent, fontSize: 15, fontWeight: '600' }}>
                     Browse without an account →
                   </Text>

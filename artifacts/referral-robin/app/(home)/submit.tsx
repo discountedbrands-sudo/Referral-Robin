@@ -11,8 +11,17 @@ import { Feather } from '@expo/vector-icons';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import * as Haptics from 'expo-haptics';
 import { parseDateInput } from '@/utils/parseDateInput';
+import { AuthGate } from '@/components/AuthGate';
 
 export default function SubmitScreen() {
+  return (
+    <AuthGate whenSignedOut="/(auth)/sign-in">
+      <SubmitScreenInner />
+    </AuthGate>
+  );
+}
+
+function SubmitScreenInner() {
   const colors = useColors();
   const insets = useSafeAreaInsets();
   const router = useRouter();

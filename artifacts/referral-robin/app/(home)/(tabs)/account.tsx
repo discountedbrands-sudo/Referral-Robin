@@ -5,8 +5,17 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useRouter } from 'expo-router';
 import { Feather, MaterialCommunityIcons } from '@expo/vector-icons';
 import { useColors } from '@/hooks/useColors';
+import { AuthGate } from '@/components/AuthGate';
 
 export default function AccountScreen() {
+  return (
+    <AuthGate whenSignedOut="/(auth)/sign-in">
+      <AccountScreenInner />
+    </AuthGate>
+  );
+}
+
+function AccountScreenInner() {
   const colors = useColors();
   const insets = useSafeAreaInsets();
   const router = useRouter();
