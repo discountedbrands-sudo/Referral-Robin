@@ -49,7 +49,7 @@ export default function SignUpPage() {
       const result = await signUp.attemptEmailAddressVerification({ code });
       if (result.status === 'complete') {
         await setActive({ session: result.createdSessionId });
-        router.replace('/(home)/(tabs)/');
+        router.replace('/(home)/(tabs)');
       }
     } catch (err: any) {
       const msg = err?.errors?.[0]?.longMessage || err?.errors?.[0]?.message || 'Verification failed';
