@@ -40,6 +40,18 @@ app.use(cors({ credentials: true, origin: true }));
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 
+// Origins allowed to present a session to this server. Without this, Clerk
+// still validates the JWT signature/expiry, but not which origin it came
+// from — this is the layer that specifically guards against subdomain
+// cookie leaking / CSRF-style token replay from an untrusted origin.
+// Keeping the old vercel.app domain during the referralrobin.com
+// transition; drop it once nothing depends on it anymore.
+const AUTHORIZED_PARTIES = [
+  "https://referralrobin.com",
+  "https://www.referralrobin.com",
+  "https://referral-robin-api-server.vercel.app",
+];
+
 // Resolve publishable key from the incoming host so the same server can serve
 // multiple Clerk custom domains in production.
 app.use(
@@ -48,6 +60,7 @@ app.use(
       getClerkProxyHost(req) ?? "",
       process.env.CLERK_PUBLISHABLE_KEY,
     ),
+    authorizedParties: AUTHORIZED_PARTIES,
   })),
 );
 
