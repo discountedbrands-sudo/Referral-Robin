@@ -8,6 +8,7 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { Link } from 'expo-router';
 import { parseDateInput, formatDateInput } from '@/utils/parseDateInput';
 import { AuthGate } from '@/components/AuthGate';
+import { WEB_TAB_BAR_HEIGHT } from '@/components/WebTabBar';
 
 export default function DashboardScreen() {
   return (
@@ -123,7 +124,7 @@ function DashboardScreenInner() {
 
   return (
     <View style={[styles.container, { backgroundColor: colors.background }]}>
-      <View style={[styles.header, { paddingTop: insets.top + 16, backgroundColor: colors.card, borderBottomColor: colors.border }]}>
+      <View style={[styles.header, { paddingTop: (Platform.OS === 'web' ? WEB_TAB_BAR_HEIGHT : insets.top) + 16, backgroundColor: colors.card, borderBottomColor: colors.border }]}>
         <Text style={[styles.title, { color: colors.foreground }]}>Your Impact</Text>
         
         <View style={styles.overallStats}>

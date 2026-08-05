@@ -7,9 +7,12 @@ const rawKey = process.env.EXPO_PUBLIC_CLERK_PUBLISHABLE_KEY || '';
 const hasClerk = rawKey.startsWith('pk_');
 
 function GatedIndex() {
-  const { isLoaded, isSignedIn } = useAuth();
+  const { isLoaded } = useAuth();
   if (!isLoaded) return null;
-  if (isSignedIn) return <Redirect href="/(home)/(tabs)" />;
+  // Deliberately no longer redirects signed-in users away from "/" — the
+  // homepage's own nav/CTAs adapt to sign-in state instead (see
+  // LandingScreen), so this is also how a signed-in user gets back to the
+  // marketing page at all (e.g. clicking the logo from inside the app).
   return <LandingScreen />;
 }
 

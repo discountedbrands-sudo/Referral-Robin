@@ -6,6 +6,7 @@ import { useRouter } from 'expo-router';
 import { Feather, MaterialCommunityIcons } from '@expo/vector-icons';
 import { useColors } from '@/hooks/useColors';
 import { AuthGate } from '@/components/AuthGate';
+import { WEB_TAB_BAR_HEIGHT } from '@/components/WebTabBar';
 
 export default function AccountScreen() {
   return (
@@ -38,7 +39,7 @@ function AccountScreenInner() {
 
   return (
     <View style={[styles.container, { backgroundColor: colors.background }]}>
-      <View style={[styles.header, { paddingTop: insets.top + 16, backgroundColor: colors.card, borderBottomColor: colors.border }]}>
+      <View style={[styles.header, { paddingTop: (Platform.OS === 'web' ? WEB_TAB_BAR_HEIGHT : insets.top) + 16, backgroundColor: colors.card, borderBottomColor: colors.border }]}>
         <Text style={[styles.title, { color: colors.foreground }]}>Account</Text>
       </View>
 

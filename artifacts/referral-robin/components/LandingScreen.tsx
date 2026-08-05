@@ -3,6 +3,7 @@ import { View, Text, Pressable, ScrollView, Image, ActivityIndicator, Platform, 
 import { useRouter } from 'expo-router';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { Feather } from '@expo/vector-icons';
+import { useAuth, useUser } from '@clerk/expo';
 import { useColors } from '@/hooks/useColors';
 import { useListBrands } from '@workspace/api-client-react';
 
@@ -31,6 +32,14 @@ export function LandingScreen() {
   const scrollRef = useRef<ScrollView>(null);
   const [gridY, setGridY] = useState(0);
   const { data: brands = [], isLoading } = useListBrands({});
+
+  // This screen renders at "/" for signed-in users too now (no more forced
+  // redirect away from it — see app/index.tsx), so it's also how a signed-in
+  // user gets back to the marketing page at all. Nav/CTAs adapt accordingly
+  // instead of assuming a signed-out visitor.
+  const { isSignedIn } = useAuth();
+  const { user } = useUser();
+  const initial = (user?.firstName?.[0] || user?.primaryEmailAddress?.emailAddress?.[0] || '?').toUpperCase();
 
   const { width } = useWindowDimensions();
   const isWeb = Platform.OS === 'web';
@@ -98,21 +107,49 @@ export function LandingScreen() {
             )}
 
             <View style={{ flexDirection: 'row', alignItems: 'center', gap: 12 }}>
-              <Pressable onPress={() => router.push('/(auth)/sign-in')} style={{ paddingVertical: 8, paddingHorizontal: 4 }}>
-                <Text style={{ color: colors.foreground, fontSize: 14, fontWeight: '600' }}>Sign in</Text>
-              </Pressable>
-              <Pressable
-                onPress={() => router.push('/(auth)/sign-up')}
-                style={({ pressed }) => ({
-                  backgroundColor: colors.primary,
-                  borderRadius: 10,
-                  paddingVertical: 9,
-                  paddingHorizontal: 16,
-                  opacity: pressed ? 0.85 : 1,
-                })}
-              >
-                <Text style={{ color: '#fff', fontSize: 14, fontWeight: '700' }}>Sign up free</Text>
-              </Pressable>
+              {isSignedIn ? (
+                <>
+                  <Pressable
+                    onPress={() => router.push('/(home)/(tabs)')}
+                    style={({ pressed }) => ({
+                      backgroundColor: colors.primary,
+                      borderRadius: 10,
+                      paddingVertical: 9,
+                      paddingHorizontal: 16,
+                      opacity: pressed ? 0.85 : 1,
+                    })}
+                  >
+                    <Text style={{ color: '#fff', fontSize: 14, fontWeight: '700' }}>Go to app</Text>
+                  </Pressable>
+                  <Pressable
+                    onPress={() => router.push('/(home)/(tabs)/account')}
+                    style={{
+                      width: 32, height: 32, borderRadius: 16, backgroundColor: colors.muted,
+                      alignItems: 'center', justifyContent: 'center',
+                    }}
+                  >
+                    <Text style={{ color: colors.foreground, fontSize: 13, fontWeight: '700' }}>{initial}</Text>
+                  </Pressable>
+                </>
+              ) : (
+                <>
+                  <Pressable onPress={() => router.push('/(auth)/sign-in')} style={{ paddingVertical: 8, paddingHorizontal: 4 }}>
+                    <Text style={{ color: colors.foreground, fontSize: 14, fontWeight: '600' }}>Sign in</Text>
+                  </Pressable>
+                  <Pressable
+                    onPress={() => router.push('/(auth)/sign-up')}
+                    style={({ pressed }) => ({
+                      backgroundColor: colors.primary,
+                      borderRadius: 10,
+                      paddingVertical: 9,
+                      paddingHorizontal: 16,
+                      opacity: pressed ? 0.85 : 1,
+                    })}
+                  >
+                    <Text style={{ color: '#fff', fontSize: 14, fontWeight: '700' }}>Sign up free</Text>
+                  </Pressable>
+                </>
+              )}
             </View>
           </View>
         </View>
@@ -176,7 +213,7 @@ export function LandingScreen() {
                 }}
               >
                 <Pressable
-                  onPress={() => router.push('/(auth)/sign-up')}
+                  onPress={() => router.push(isSignedIn ? '/(home)/(tabs)' : '/(auth)/sign-up')}
                   style={({ pressed }) => ({
                     backgroundColor: colors.primary,
                     borderRadius: 12,
@@ -187,11 +224,13 @@ export function LandingScreen() {
                     width: isWide ? undefined : '100%',
                   })}
                 >
-                  <Text style={{ color: '#fff', fontSize: 16, fontWeight: '700' }}>Sign up free</Text>
+                  <Text style={{ color: '#fff', fontSize: 16, fontWeight: '700' }}>
+                    {isSignedIn ? 'Go to Explore' : 'Sign up free'}
+                  </Text>
                 </Pressable>
                 <Pressable onPress={() => router.push('/(home)/(tabs)')} style={{ alignItems: 'center', paddingVertical: 10, paddingHorizontal: isWide ? 12 : 0 }}>
                   <Text style={{ color: colors.accent, fontSize: 15, fontWeight: '600' }}>
-                    Browse without an account →
+                    {isSignedIn ? 'Browse brands →' : 'Browse without an account →'}
                   </Text>
                 </Pressable>
               </View>
@@ -329,10 +368,10 @@ export function LandingScreen() {
           {/* Footer CTA */}
           <View style={{ paddingHorizontal: hPad + 24, paddingTop: 36, paddingBottom: isWide ? 24 : 0, alignItems: 'center', gap: 16 }}>
             <Text style={{ color: colors.foreground, fontSize: isWide ? 26 : 20, fontWeight: '800', textAlign: 'center' }}>
-              Ready to stop missing out on referral rewards?
+              {isSignedIn ? 'Ready to see what\'s rotating?' : 'Ready to stop missing out on referral rewards?'}
             </Text>
             <Pressable
-              onPress={() => router.push('/(auth)/sign-up')}
+              onPress={() => router.push(isSignedIn ? '/(home)/(tabs)' : '/(auth)/sign-up')}
               style={({ pressed }) => ({
                 backgroundColor: colors.primary,
                 borderRadius: 12,
@@ -341,7 +380,9 @@ export function LandingScreen() {
                 opacity: pressed ? 0.85 : 1,
               })}
             >
-              <Text style={{ color: '#fff', fontSize: 16, fontWeight: '700' }}>Create your free account</Text>
+              <Text style={{ color: '#fff', fontSize: 16, fontWeight: '700' }}>
+                {isSignedIn ? 'Go to Explore' : 'Create your free account'}
+              </Text>
             </Pressable>
 
             <View style={{ flexDirection: 'row', gap: 20 }}>

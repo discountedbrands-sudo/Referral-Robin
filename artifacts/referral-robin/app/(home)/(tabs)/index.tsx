@@ -8,6 +8,7 @@ import { useListBrands } from '@workspace/api-client-react';
 import { Feather, MaterialCommunityIcons } from '@expo/vector-icons';
 import { Link, useRouter } from 'expo-router';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
+import { WEB_TAB_BAR_HEIGHT } from '@/components/WebTabBar';
 
 const CATEGORIES = [
   'All',
@@ -49,11 +50,15 @@ export default function ExploreScreen() {
   // same size. A consistent light backing (logos are designed for it) plus
   // resizeMode="contain" keeps every mark the same footprint without
   // stretching or cropping.
-  const LOGO_BOX = 44;
+  // Bumped from 44 — at 106 brands across 10 categories, the logo is the
+  // fastest way to recognise a brand at a glance, so it gets more of the
+  // tile's footprint; everything else below (padding, text, gaps) shrinks
+  // to compensate, keeping the overall tile the same size.
+  const LOGO_BOX = 60;
 
-  const Logo = ({ item }: { item: any }) => (
+  const Logo = ({ item, size = LOGO_BOX }: { item: any; size?: number }) => (
     <View style={{
-      width: LOGO_BOX, height: LOGO_BOX, borderRadius: 10,
+      width: size, height: size, borderRadius: size >= 56 ? 12 : 10,
       backgroundColor: '#FFFFFF',
       alignItems: 'center', justifyContent: 'center',
       overflow: 'hidden',
@@ -61,7 +66,7 @@ export default function ExploreScreen() {
       {item.logoUrl && !imgErrors[item.id] ? (
         <Image
           source={{ uri: item.logoUrl }}
-          style={{ width: LOGO_BOX - 10, height: LOGO_BOX - 10 }}
+          style={{ width: size - 10, height: size - 10 }}
           resizeMode="contain"
           onError={() => setImgErrors(e => ({ ...e, [item.id]: true }))}
         />
@@ -71,7 +76,7 @@ export default function ExploreScreen() {
           backgroundColor: colors.primary,
           alignItems: 'center', justifyContent: 'center',
         }}>
-          <Text style={{ color: '#fff', fontSize: 17, fontWeight: '600' }}>
+          <Text style={{ color: '#fff', fontSize: size >= 56 ? 22 : 17, fontWeight: '600' }}>
             {item.name.charAt(0)}
           </Text>
         </View>
@@ -113,12 +118,12 @@ export default function ExploreScreen() {
         backgroundColor: colors.muted,
         borderWidth: 1,
         borderColor: 'rgba(255,255,255,0.10)',
-        padding: 14,
+        padding: 12,
         opacity: pressed ? 0.82 : 1,
       })}
     >
       {/* Logo — centered, fixed size */}
-      <View style={{ alignItems: 'center', marginBottom: 10 }}>
+      <View style={{ alignItems: 'center', marginBottom: 8 }}>
         <Logo item={item} />
       </View>
 
@@ -126,16 +131,16 @@ export default function ExploreScreen() {
           via flex — height stays identical across every card regardless
           of whether the offer text is short, long, or missing. */}
       <View style={{ flex: 1, justifyContent: 'space-between' }}>
-        <View style={{ gap: 3 }}>
-          <Text style={{ fontSize: 14, color: colors.foreground, fontWeight: '600' }} numberOfLines={1}>
+        <View style={{ gap: 2 }}>
+          <Text style={{ fontSize: 13, color: colors.foreground, fontWeight: '600' }} numberOfLines={1}>
             {item.name}
           </Text>
-          <Text style={{ fontSize: 11, color: colors.accent }} numberOfLines={1}>
+          <Text style={{ fontSize: 10, color: colors.accent }} numberOfLines={1}>
             {item.currentOffer || ' '}
           </Text>
         </View>
 
-        <Text style={{ fontSize: 11, color: colors.mutedForeground }} numberOfLines={1}>
+        <Text style={{ fontSize: 10, color: colors.mutedForeground }} numberOfLines={1}>
           {item.codeCount} code{item.codeCount !== 1 ? 's' : ''}
         </Text>
       </View>
@@ -145,7 +150,7 @@ export default function ExploreScreen() {
   return (
     <View style={{ flex: 1, backgroundColor: colors.background }}>
       {/* Header */}
-      <View style={{ paddingHorizontal: 16, paddingTop: insets.top + 16, paddingBottom: 12, gap: 12 }}>
+      <View style={{ paddingHorizontal: 16, paddingTop: (Platform.OS === 'web' ? WEB_TAB_BAR_HEIGHT : insets.top) + 16, paddingBottom: 12, gap: 12 }}>
         {/* Search + view toggle */}
         <View style={{ flexDirection: 'row', gap: 10 }}>
           <View style={{
@@ -263,8 +268,10 @@ export default function ExploreScreen() {
               paddingHorizontal: 14, paddingVertical: 12,
               opacity: pressed ? 0.82 : 1,
             })}>
-              {/* Logo — same 36×36 */}
-              <Logo item={item} />
+              {/* List rows stay at the original 44×44 — the bigger logo is a
+                  grid-tile-specific readability fix, not needed in a
+                  one-per-row list layout. */}
+              <Logo item={item} size={44} />
 
               <View style={{ flex: 1, gap: 2 }}>
                 <Text style={{ fontSize: 15, color: colors.foreground }} numberOfLines={1}>
