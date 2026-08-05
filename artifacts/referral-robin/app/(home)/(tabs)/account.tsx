@@ -1,5 +1,5 @@
 import React from 'react';
-import { View, Text, StyleSheet, Pressable, Alert } from 'react-native';
+import { View, Text, StyleSheet, Pressable, Alert, Platform } from 'react-native';
 import { useUser, useClerk } from '@clerk/expo';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useRouter } from 'expo-router';
@@ -23,6 +23,13 @@ function AccountScreenInner() {
   const { signOut } = useClerk();
 
   const handleSignOut = () => {
+    // react-native-web's Alert.alert() is a no-op (see node_modules/react-native-web
+    // /dist/exports/Alert/index.js — `static alert() {}`), so its button onPress
+    // callbacks never fire on web. Fall back to window.confirm there.
+    if (Platform.OS === 'web') {
+      if (window.confirm('Are you sure you want to sign out?')) signOut();
+      return;
+    }
     Alert.alert('Sign Out', 'Are you sure you want to sign out?', [
       { text: 'Cancel', style: 'cancel' },
       { text: 'Sign Out', style: 'destructive', onPress: () => signOut() },

@@ -69,7 +69,10 @@ function DashboardScreenInner() {
           closeEdit();
         },
         onError: (err: any) => {
-          Alert.alert('Error', err?.data?.error || 'Failed to update code.');
+          const message = err?.data?.error || 'Failed to update code.';
+          // Alert.alert() is a no-op on react-native-web; fall back to window.alert.
+          if (Platform.OS === 'web') window.alert(message);
+          else Alert.alert('Error', message);
         },
       },
     );

@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { View, Text, StyleSheet, Pressable, ActivityIndicator, Alert } from 'react-native';
+import { View, Text, StyleSheet, Pressable, ActivityIndicator, Alert, Platform } from 'react-native';
 import { useLocalSearchParams, useRouter } from 'expo-router';
 import { useColors } from '@/hooks/useColors';
 import { useGetBrand, useGetCooldown, useGetNextCode, useConfirmCopy, useReportCode, getGetBrandQueryKey, getGetCooldownQueryKey } from '@workspace/api-client-react';
@@ -66,11 +66,15 @@ export default function BrandRevealScreen() {
         refetchCooldown();
       },
       onError: (err: any) => {
+        // Alert.alert() is a no-op on react-native-web; fall back to window.alert.
         if (err?.data?.error === 'CooldownError') {
-          Alert.alert("Hold on", "You are on cooldown for this brand.");
+          if (Platform.OS === 'web') window.alert('You are on cooldown for this brand.');
+          else Alert.alert("Hold on", "You are on cooldown for this brand.");
           refetchCooldown();
         } else {
-          Alert.alert("Error", err?.data?.error || "Failed to get code.");
+          const message = err?.data?.error || "Failed to get code.";
+          if (Platform.OS === 'web') window.alert(message);
+          else Alert.alert("Error", message);
         }
       }
     });
@@ -87,26 +91,33 @@ export default function BrandRevealScreen() {
     setTimeout(() => setCopied(false), 3000);
   };
 
+  const submitReport = () => {
+    if (!revealedCode || !deviceId) return;
+    reportCode.mutate({ codeId: revealedCode.id, data: { deviceId } }, {
+      onSuccess: () => {
+        // Alert.alert() is a no-op on react-native-web; fall back to window.alert.
+        if (Platform.OS === 'web') window.alert('Thanks — code reported. It will be reviewed.');
+        else Alert.alert("Thanks", "Code reported. It will be reviewed.");
+        setRevealedCode(null);
+        Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
+      }
+    });
+  };
+
   const handleReport = () => {
     if (!revealedCode || !deviceId) return;
+    // Alert.alert() with buttons is a no-op on react-native-web (its onPress
+    // callbacks never fire there); fall back to window.confirm.
+    if (Platform.OS === 'web') {
+      if (window.confirm('Is this code invalid or expired?')) submitReport();
+      return;
+    }
     Alert.alert(
       "Report Code",
       "Is this code invalid or expired?",
       [
         { text: "Cancel", style: "cancel" },
-        { 
-          text: "Report", 
-          style: "destructive",
-          onPress: () => {
-            reportCode.mutate({ codeId: revealedCode.id, data: { deviceId } }, {
-              onSuccess: () => {
-                Alert.alert("Thanks", "Code reported. It will be reviewed.");
-                setRevealedCode(null);
-                Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
-              }
-            });
-          }
-        }
+        { text: "Report", style: "destructive", onPress: submitReport },
       ]
     );
   };

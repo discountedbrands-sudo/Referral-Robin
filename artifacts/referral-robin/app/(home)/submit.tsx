@@ -76,11 +76,15 @@ function SubmitScreenInner() {
           if (Platform.OS !== 'web') {
             Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
           }
-          Alert.alert('Success', 'Your code has been added to the queue!');
+          // Alert.alert() is a no-op on react-native-web; fall back to window.alert.
+          if (Platform.OS === 'web') window.alert('Your code has been added to the queue!');
+          else Alert.alert('Success', 'Your code has been added to the queue!');
           router.back();
         },
         onError: (err: any) => {
-          Alert.alert('Error', err?.data?.error || 'Failed to submit code.');
+          const message = err?.data?.error || 'Failed to submit code.';
+          if (Platform.OS === 'web') window.alert(message);
+          else Alert.alert('Error', message);
         },
       },
     );
