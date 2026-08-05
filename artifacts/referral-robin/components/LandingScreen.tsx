@@ -30,7 +30,18 @@ export function LandingScreen() {
   const insets = useSafeAreaInsets();
   const router = useRouter();
   const scrollRef = useRef<ScrollView>(null);
-  const [gridY, setGridY] = useState(0);
+  // onLayout's `layout.y` is relative to the *immediate parent*, not to the
+  // ScrollView's content origin. The "what's on offer" intro is nested
+  // inside its own maxWidth wrapper (the 3rd of 3 top-level siblings under
+  // the ScrollView), so its own onLayout y was ~0 regardless of true scroll
+  // position — scrollToGrid was scrolling to ~0, a no-op from the top.
+  // Fix: also track the two preceding top-level sections' heights (their
+  // onLayout IS relative to the ScrollView, since they're direct children of
+  // it) and sum all three for the real target offset.
+  const [heroStepsHeight, setHeroStepsHeight] = useState(0);
+  const [whyBandHeight, setWhyBandHeight] = useState(0);
+  const [gridIntroOffset, setGridIntroOffset] = useState(0);
+  const gridY = heroStepsHeight + whyBandHeight + gridIntroOffset;
   const { data: brands = [], isLoading } = useListBrands({});
 
   // This screen renders at "/" for signed-in users too now (no more forced
@@ -44,6 +55,11 @@ export function LandingScreen() {
   const { width } = useWindowDimensions();
   const isWeb = Platform.OS === 'web';
   const isWide = isWeb && width >= WIDE_BREAKPOINT;
+  // Below this, logo+wordmark and the sign-in/sign-up (or avatar) controls
+  // don't fit on one row without wrapping — the nav has no wrap fallback,
+  // so it clips instead. Condense rather than add wrapping (wrapping a
+  // justify-space-between row reads oddly with items on the wrong line).
+  const isNarrowNav = isWeb && width < 400;
 
   // On web, size the grid to the viewport (more columns as it gets wider);
   // on native, stay with the original fixed 3-across layout.
@@ -89,7 +105,7 @@ export function LandingScreen() {
               maxWidth: CONTENT_MAX_WIDTH,
               width: '100%',
               alignSelf: 'center',
-              paddingHorizontal: 24,
+              paddingHorizontal: isNarrowNav ? 12 : 24,
               paddingVertical: 16,
             }}
           >
@@ -115,7 +131,7 @@ export function LandingScreen() {
                       backgroundColor: colors.primary,
                       borderRadius: 10,
                       paddingVertical: 9,
-                      paddingHorizontal: 16,
+                      paddingHorizontal: isNarrowNav ? 12 : 16,
                       opacity: pressed ? 0.85 : 1,
                     })}
                   >
@@ -133,16 +149,22 @@ export function LandingScreen() {
                 </>
               ) : (
                 <>
-                  <Pressable onPress={() => router.push('/(auth)/sign-in')} style={{ paddingVertical: 8, paddingHorizontal: 4 }}>
-                    <Text style={{ color: colors.foreground, fontSize: 14, fontWeight: '600' }}>Sign in</Text>
-                  </Pressable>
+                  {/* Dropped below ~400px — not enough room for logo + wordmark +
+                      "Sign in" + the sign-up pill on one row, and this row has
+                      no wrap fallback. The pill alone is the one action that
+                      actually needs to survive at any width. */}
+                  {!isNarrowNav && (
+                    <Pressable onPress={() => router.push('/(auth)/sign-in')} style={{ paddingVertical: 8, paddingHorizontal: 4 }}>
+                      <Text style={{ color: colors.foreground, fontSize: 14, fontWeight: '600' }}>Sign in</Text>
+                    </Pressable>
+                  )}
                   <Pressable
                     onPress={() => router.push('/(auth)/sign-up')}
                     style={({ pressed }) => ({
                       backgroundColor: colors.primary,
                       borderRadius: 10,
                       paddingVertical: 9,
-                      paddingHorizontal: 16,
+                      paddingHorizontal: isNarrowNav ? 12 : 16,
                       opacity: pressed ? 0.85 : 1,
                     })}
                   >
@@ -160,7 +182,10 @@ export function LandingScreen() {
         style={{ flex: 1 }}
         contentContainerStyle={{ paddingBottom: 60 }}
       >
-        <View style={{ maxWidth: CONTENT_MAX_WIDTH, width: '100%', alignSelf: 'center' }}>
+        <View
+          onLayout={(e) => setHeroStepsHeight(e.nativeEvent.layout.height)}
+          style={{ maxWidth: CONTENT_MAX_WIDTH, width: '100%', alignSelf: 'center' }}
+        >
           {/* Hero */}
           <View
             style={{
@@ -275,7 +300,10 @@ export function LandingScreen() {
         </View>
 
         {/* Why Round Robin — full-bleed band, centered inner column */}
-        <View style={{ backgroundColor: colors.muted, paddingVertical: isWide ? 56 : 32 }}>
+        <View
+          onLayout={(e) => setWhyBandHeight(e.nativeEvent.layout.height)}
+          style={{ backgroundColor: colors.muted, paddingVertical: isWide ? 56 : 32 }}
+        >
           <View
             style={{
               maxWidth: CONTENT_MAX_WIDTH, width: '100%', alignSelf: 'center',
@@ -300,7 +328,7 @@ export function LandingScreen() {
         <View style={{ maxWidth: CONTENT_MAX_WIDTH, width: '100%', alignSelf: 'center' }}>
           {/* Category showcase intro */}
           <View
-            onLayout={(e) => setGridY(e.nativeEvent.layout.y)}
+            onLayout={(e) => setGridIntroOffset(e.nativeEvent.layout.y)}
             style={{ paddingHorizontal: hPad + 24, paddingTop: isWide ? 56 : 36, paddingBottom: 8, gap: 6 }}
           >
             <Text style={{ color: colors.foreground, fontSize: isWide ? 28 : 22, fontWeight: '800' }}>
