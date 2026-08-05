@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import {
   View, Text, TextInput, Pressable,
-  Platform, ScrollView, ActivityIndicator, Image, FlatList,
+  Platform, ScrollView, ActivityIndicator, Image,
 } from 'react-native';
 import { useColors } from '@/hooks/useColors';
 import { useListBrands } from '@workspace/api-client-react';
@@ -9,7 +9,19 @@ import { Feather, MaterialCommunityIcons } from '@expo/vector-icons';
 import { Link, useRouter } from 'expo-router';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
-const CATEGORIES = ['All', 'Fintech', 'Investing', 'Crypto', 'Banking'];
+const CATEGORIES = [
+  'All',
+  'Banking & Fintech',
+  'Investing & Crypto',
+  'Insurance',
+  'Gyms & Fitness',
+  'Medical & Weight Loss',
+  'Utilities',
+  'EV Charging',
+  'Retail & Cashback',
+  'Software & Apps',
+  'Travel & Money Transfer',
+];
 
 export default function ExploreScreen() {
   const colors = useColors();
@@ -176,17 +188,15 @@ export default function ExploreScreen() {
           </View>
         </View>
 
-        {/* Category chips */}
-        <FlatList
-          horizontal
-          showsHorizontalScrollIndicator={false}
-          data={CATEGORIES}
-          keyExtractor={item => item}
-          contentContainerStyle={{ gap: 8 }}
-          renderItem={({ item }) => {
+        {/* Category chips — wraps to multiple rows instead of a horizontal
+            scroller, so all 10+ categories stay visible/discoverable at once
+            rather than hidden off-screen. */}
+        <View style={{ flexDirection: 'row', flexWrap: 'wrap', gap: 8 }}>
+          {CATEGORIES.map((item) => {
             const sel = category === item;
             return (
               <Pressable
+                key={item}
                 onPress={() => setCategory(item)}
                 style={{
                   paddingHorizontal: 14, paddingVertical: 6, borderRadius: 20, borderWidth: 1,
@@ -199,8 +209,8 @@ export default function ExploreScreen() {
                 </Text>
               </Pressable>
             );
-          }}
-        />
+          })}
+        </View>
       </View>
 
       {/* Content */}
