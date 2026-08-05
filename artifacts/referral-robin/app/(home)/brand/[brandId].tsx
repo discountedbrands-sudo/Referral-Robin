@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { View, Text, StyleSheet, Pressable, ActivityIndicator, Alert, Platform } from 'react-native';
 import { useLocalSearchParams, useRouter } from 'expo-router';
+import { useAuth } from '@clerk/expo';
 import { useColors } from '@/hooks/useColors';
 import { useGetBrand, useGetCooldown, useGetNextCode, useConfirmCopy, useReportCode, getGetBrandQueryKey, getGetCooldownQueryKey } from '@workspace/api-client-react';
 import { Feather, MaterialCommunityIcons } from '@expo/vector-icons';
@@ -16,6 +17,7 @@ export default function BrandRevealScreen() {
   const insets = useSafeAreaInsets();
   const router = useRouter();
   const deviceId = useDevice();
+  const { isSignedIn } = useAuth();
 
   const [revealedCode, setRevealedCode] = useState<{ id: number; code: string } | null>(null);
   const [copied, setCopied] = useState(false);
@@ -57,8 +59,19 @@ export default function BrandRevealScreen() {
 
   const handleGetCode = () => {
     if (!deviceId) return;
+
+    // Browsing brands is public, but revealing a real code isn't — this mirrors
+    // the requireAuth check the server enforces on POST /codes/next. This
+    // client-side check is just UX (skip the round trip, send a clear prompt);
+    // the actual security boundary is the server rejecting an unauthenticated
+    // request with 401, handled below as a fallback in case this state is stale.
+    if (!isSignedIn) {
+      router.push('/(auth)/sign-in');
+      return;
+    }
+
     Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
-    
+
     getNextCode.mutate({ data: { brandId: id, deviceId } }, {
       onSuccess: (data) => {
         setRevealedCode({ id: data.codeId, code: data.code });
@@ -67,7 +80,9 @@ export default function BrandRevealScreen() {
       },
       onError: (err: any) => {
         // Alert.alert() is a no-op on react-native-web; fall back to window.alert.
-        if (err?.data?.error === 'CooldownError') {
+        if (err?.status === 401) {
+          router.push('/(auth)/sign-in');
+        } else if (err?.data?.error === 'CooldownError') {
           if (Platform.OS === 'web') window.alert('You are on cooldown for this brand.');
           else Alert.alert("Hold on", "You are on cooldown for this brand.");
           refetchCooldown();
@@ -188,7 +203,7 @@ export default function BrandRevealScreen() {
                 </Text>
               ) : (
                 <Text style={[styles.mainButtonText, { color: colors.primaryForeground }]}>
-                  Get Code
+                  {isSignedIn ? 'Get Code' : 'Sign in to get code'}
                 </Text>
               )}
             </Pressable>

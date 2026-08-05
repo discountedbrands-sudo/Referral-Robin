@@ -19,7 +19,9 @@ const router: IRouter = Router();
 const COOLDOWN_MS = 10 * 60 * 1000; // 10 minutes
 
 // POST /codes/next — serve next code in the weighted queue (never exposes raw list)
-router.post("/codes/next", async (req, res): Promise<void> => {
+// requireAuth: browsing brands is public, but revealing a real code must not be —
+// deviceId alone is client-supplied and unverified, so it can't be the auth boundary.
+router.post("/codes/next", requireAuth, async (req, res): Promise<void> => {
   const parsed = GetNextCodeBody.safeParse(req.body);
   if (!parsed.success) {
     res.status(400).json({ error: parsed.error.message });
