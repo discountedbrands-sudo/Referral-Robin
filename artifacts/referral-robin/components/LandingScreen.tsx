@@ -343,6 +343,10 @@ export function LandingScreen() {
             >
               <Text style={{ color: '#fff', fontSize: 16, fontWeight: '700' }}>Create your free account</Text>
             </Pressable>
+
+            <Pressable onPress={() => router.push('/privacy')} style={{ paddingVertical: 8 }}>
+              <Text style={{ color: colors.mutedForeground, fontSize: 13 }}>Privacy Policy</Text>
+            </Pressable>
           </View>
         </View>
       </ScrollView>
