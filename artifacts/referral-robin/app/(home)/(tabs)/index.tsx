@@ -33,10 +33,14 @@ export default function ExploreScreen() {
   const [viewMode, setViewMode] = useState<'grid' | 'list'>('grid');
   const [imgErrors, setImgErrors] = useState<Record<string, boolean>>({});
 
-  const { data: brands = [], isLoading } = useListBrands({
+  const { data, isLoading, isError } = useListBrands({
     search: search.trim() || undefined,
     category: category === 'All' ? undefined : category,
   });
+  // Guard against a malformed/non-array response (e.g. an error page or
+  // unexpected payload shape) so rendering falls back to an empty state
+  // instead of crashing on .length/.slice/.map below.
+  const brands: any[] = Array.isArray(data) ? data : [];
 
   // Fixed-size backing box for every logo — real logo images vary wildly in
   // built-in padding/background (some are full-bleed colour squares, some
@@ -221,7 +225,17 @@ export default function ExploreScreen() {
           </View>
         )}
 
-        {!isLoading && brands.length === 0 && (
+        {!isLoading && isError && (
+          <View style={{ alignItems: 'center', paddingTop: 60, gap: 12 }}>
+            <Feather name="alert-triangle" size={40} color={colors.mutedForeground} />
+            <Text style={{ color: colors.foreground, fontSize: 17 }}>Something went wrong</Text>
+            <Text style={{ color: colors.mutedForeground, fontSize: 14, textAlign: 'center' }}>
+              Couldn't load brands right now. Try again in a moment.
+            </Text>
+          </View>
+        )}
+
+        {!isLoading && !isError && brands.length === 0 && (
           <View style={{ alignItems: 'center', paddingTop: 60, gap: 12 }}>
             <MaterialCommunityIcons name="magnify-close" size={48} color={colors.mutedForeground} />
             <Text style={{ color: colors.foreground, fontSize: 17, }}>No brands found</Text>
