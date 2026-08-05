@@ -1,6 +1,6 @@
 import { Router, type IRouter } from "express";
 import { eq, and } from "drizzle-orm";
-import { db, brandsTable, codesTable, queueStateTable, deviceCooldownsTable } from "@workspace/db";
+import { db, brandsTable, codesTable, queueStateTable, deviceCooldownsTable, codeReportsTable } from "@workspace/db";
 import {
   GetNextCodeBody,
   ConfirmCopyBody,
@@ -276,7 +276,11 @@ router.patch(
 );
 
 // POST /codes/:codeId/report — report a dead code
-router.post("/codes/:codeId/report", async (req, res): Promise<void> => {
+// requireAuth: reporting is a destructive action (3 reports auto-removes the
+// code, see below), not a read — same reasoning as POST /codes/next. Also
+// dedup by deviceId so a single caller can't fast-track that threshold alone;
+// ReportCodeBody already required deviceId but the handler never used it.
+router.post("/codes/:codeId/report", requireAuth, async (req, res): Promise<void> => {
   const params = ReportCodeParams.safeParse(req.params);
   if (!params.success) {
     res.status(400).json({ error: params.error.message });
@@ -290,6 +294,7 @@ router.post("/codes/:codeId/report", async (req, res): Promise<void> => {
   }
 
   const { codeId } = params.data;
+  const { deviceId } = body.data;
 
   const [codeRow] = await db
     .select()
@@ -301,8 +306,21 @@ router.post("/codes/:codeId/report", async (req, res): Promise<void> => {
     return;
   }
 
+  const [existingReport] = await db
+    .select()
+    .from(codeReportsTable)
+    .where(and(eq(codeReportsTable.deviceId, deviceId), eq(codeReportsTable.codeId, codeId)));
+
+  if (existingReport) {
+    // Already reported by this device — idempotent, don't count it again.
+    res.json({ success: true });
+    return;
+  }
+
+  await db.insert(codeReportsTable).values({ deviceId, codeId });
+
   const newReportCount = codeRow.reportCount + 1;
-  const shouldRemove = newReportCount >= 3; // auto-remove after 3 reports
+  const shouldRemove = newReportCount >= 3; // auto-remove after 3 distinct-device reports
 
   await db
     .update(codesTable)

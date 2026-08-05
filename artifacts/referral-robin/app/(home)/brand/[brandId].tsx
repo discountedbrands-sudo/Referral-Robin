@@ -115,7 +115,13 @@ export default function BrandRevealScreen() {
         else Alert.alert("Thanks", "Code reported. It will be reviewed.");
         setRevealedCode(null);
         Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
-      }
+      },
+      onError: (err: any) => {
+        // Reaching this screen's report button already implies a signed-in
+        // reveal happened (see handleGetCode), but the session could have
+        // lapsed since — fall back the same way as getNextCode's 401 case.
+        if (err?.status === 401) router.push('/(auth)/sign-in');
+      },
     });
   };
 
