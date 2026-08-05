@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import {
   View, Text, TextInput, Pressable,
-  Platform, ScrollView, ActivityIndicator, Image,
+  Platform, ScrollView, ActivityIndicator, Image, useWindowDimensions,
 } from 'react-native';
 import { useColors } from '@/hooks/useColors';
 import { useListBrands } from '@workspace/api-client-react';
@@ -33,6 +33,13 @@ export default function ExploreScreen() {
   const [category, setCategory] = useState('All');
   const [viewMode, setViewMode] = useState<'grid' | 'list'>('grid');
   const [imgErrors, setImgErrors] = useState<Record<string, boolean>>({});
+
+  const { width } = useWindowDimensions();
+  // 2 columns on native (phone-width) and narrow web; scales up to 4 on a
+  // wide desktop viewport instead of staying pinned at 2 — a comparison-site
+  // grid should pack more tiles per screen as there's more room, not just
+  // stretch the same 2 columns wider.
+  const numColumns = Platform.OS === 'web' ? Math.max(2, Math.min(4, Math.floor(width / 260))) : 2;
 
   const { data, isLoading, isError } = useListBrands({
     search: search.trim() || undefined,
@@ -84,13 +91,11 @@ export default function ExploreScreen() {
     </View>
   );
 
-  // Split into pairs for 2-column grid
+  // Split into rows of `numColumns` for the grid
   const rows: any[][] = [];
-  for (let i = 0; i < brands.length; i += 2) {
-    rows.push(brands.slice(i, i + 2));
+  for (let i = 0; i < brands.length; i += numColumns) {
+    rows.push(brands.slice(i, i + numColumns));
   }
-
-  const GRID_CARD_HEIGHT = 172;
 
   // A real, visibly-distinct tile. Two things that *don't* work on this
   // near-black palette: colors.card (#1A1D26) is only ~6/255 lighter than
@@ -108,12 +113,17 @@ export default function ExploreScreen() {
   // near-identical bug on the Account screen's "My Codes" row), so the
   // container never got a background/border no matter what values were set.
   // A plain Pressable + router.push sidesteps that entirely.
+  // No fixed height/flex-space-between here on purpose — every text line
+  // below is numberOfLines={1} at a fixed font size, so every card's
+  // content is already naturally the same height across the grid. Forcing
+  // a taller fixed height and flex-filling the gap (the old approach) is
+  // exactly what read as "too much empty space" — letting the card size to
+  // its content with small fixed gaps is what makes it compact instead.
   const GridCard = ({ item }: { item: any }) => (
     <Pressable
       onPress={() => router.push(`/(home)/brand/${item.id}`)}
       style={({ pressed }) => ({
         flex: 1,
-        height: GRID_CARD_HEIGHT,
         borderRadius: 16,
         backgroundColor: colors.muted,
         borderWidth: 1,
@@ -127,23 +137,18 @@ export default function ExploreScreen() {
         <Logo item={item} />
       </View>
 
-      {/* Name + offer up top, code count pinned to the card's bottom edge
-          via flex — height stays identical across every card regardless
-          of whether the offer text is short, long, or missing. */}
-      <View style={{ flex: 1, justifyContent: 'space-between' }}>
-        <View style={{ gap: 2 }}>
-          <Text style={{ fontSize: 13, color: colors.foreground, fontWeight: '600' }} numberOfLines={1}>
-            {item.name}
-          </Text>
-          <Text style={{ fontSize: 10, color: colors.accent }} numberOfLines={1}>
-            {item.currentOffer || ' '}
-          </Text>
-        </View>
-
-        <Text style={{ fontSize: 10, color: colors.mutedForeground }} numberOfLines={1}>
-          {item.codeCount} code{item.codeCount !== 1 ? 's' : ''}
+      <View style={{ gap: 2 }}>
+        <Text style={{ fontSize: 13, color: colors.foreground, fontWeight: '600' }} numberOfLines={1}>
+          {item.name}
+        </Text>
+        <Text style={{ fontSize: 10, color: colors.accent }} numberOfLines={1}>
+          {item.currentOffer || ' '}
         </Text>
       </View>
+
+      <Text style={{ fontSize: 10, color: colors.mutedForeground, marginTop: 8 }} numberOfLines={1}>
+        {item.codeCount} code{item.codeCount !== 1 ? 's' : ''}
+      </Text>
     </Pressable>
   );
 
@@ -254,7 +259,12 @@ export default function ExploreScreen() {
             {row.map((item: any) => (
               <GridCard key={item.id} item={item} />
             ))}
-            {row.length === 1 && <View style={{ flex: 1 }} />}
+            {/* Last row may have fewer than numColumns items — pad with
+                invisible flex-1 spacers so real cards don't stretch wider
+                than their siblings in the rows above. */}
+            {Array.from({ length: numColumns - row.length }).map((_, i) => (
+              <View key={`filler-${i}`} style={{ flex: 1 }} />
+            ))}
           </View>
         ))}
 
