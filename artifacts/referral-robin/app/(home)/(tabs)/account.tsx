@@ -76,10 +76,10 @@ function AccountScreenInner() {
               { backgroundColor: colors.card, borderColor: colors.border },
               pressed && { opacity: 0.8 },
             ]}
-            onPress={() => router.push('/(home)/admin/submit-brand')}
+            onPress={() => router.push('/(home)/admin')}
           >
-            <Feather name="plus-circle" size={20} color={colors.foreground} />
-            <Text style={[styles.rowText, { color: colors.foreground }]}>Add a Company</Text>
+            <Feather name="shield" size={20} color={colors.foreground} />
+            <Text style={[styles.rowText, { color: colors.foreground }]}>Admin Panel</Text>
             <Feather name="chevron-right" size={20} color={colors.mutedForeground} />
           </Pressable>
         )}

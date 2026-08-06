@@ -1,5 +1,12 @@
-import { useMutation } from '@tanstack/react-query';
-import type { UseMutationOptions, UseMutationResult } from '@tanstack/react-query';
+import { useMutation, useQuery } from '@tanstack/react-query';
+import type {
+  QueryFunction,
+  QueryKey,
+  UseMutationOptions,
+  UseMutationResult,
+  UseQueryOptions,
+  UseQueryResult,
+} from '@tanstack/react-query';
 import { customFetch } from './custom-fetch';
 import type { ErrorType, BodyType } from './custom-fetch';
 
@@ -47,6 +54,104 @@ export const useCreateBrand = <TError = ErrorType<void>, TContext = unknown>(opt
   const { mutation: mutationOptions, request: requestOptions } = options ?? {};
   return useMutation({
     mutationFn: ({ data }) => createBrand(data, requestOptions),
+    ...mutationOptions,
+  });
+};
+
+// --- List all brands (admin only — active and inactive) ---
+
+export type AdminBrand = CreatedBrand;
+
+export const getListBrandsAdminUrl = () => `/api/admin/brands`;
+
+/**
+ * @summary List all brands, active and inactive (admin only)
+ */
+export const listBrandsAdmin = async (options?: Parameters<typeof customFetch>[1]): Promise<AdminBrand[]> => {
+  return customFetch<AdminBrand[]>(getListBrandsAdminUrl(), { ...options, method: 'GET' });
+};
+
+export const getListBrandsAdminQueryKey = () => [`/api/admin/brands`] as const;
+
+export const getListBrandsAdminQueryOptions = <TData = AdminBrand[], TError = ErrorType<unknown>>(options?: {
+  query?: UseQueryOptions<AdminBrand[], TError, TData>;
+  request?: Parameters<typeof customFetch>[1];
+}) => {
+  const { query: queryOptions, request: requestOptions } = options ?? {};
+  const queryKey = queryOptions?.queryKey ?? getListBrandsAdminQueryKey();
+  const queryFn: QueryFunction<AdminBrand[]> = ({ signal }) => listBrandsAdmin({ signal, ...requestOptions });
+  return { queryKey, queryFn, ...queryOptions } as UseQueryOptions<AdminBrand[], TError, TData> & { queryKey: QueryKey };
+};
+
+export const useListBrandsAdmin = <TData = AdminBrand[], TError = ErrorType<unknown>>(options?: {
+  query?: UseQueryOptions<AdminBrand[], TError, TData>;
+  request?: Parameters<typeof customFetch>[1];
+}): UseQueryResult<TData, TError> & { queryKey: QueryKey } => {
+  const queryOptions = getListBrandsAdminQueryOptions(options);
+  const query = useQuery(queryOptions) as UseQueryResult<TData, TError> & { queryKey: QueryKey };
+  return { ...query, queryKey: queryOptions.queryKey };
+};
+
+// --- Edit a brand (admin only) ---
+
+export interface UpdateBrandInput {
+  name?: string;
+  domain?: string;
+  category?: string;
+  currentOffer?: string;
+  active?: boolean;
+}
+
+export const getUpdateBrandUrl = (brandId: number) => `/api/admin/brands/${brandId}`;
+
+/**
+ * @summary Edit a brand (admin only)
+ */
+export const updateBrand = async (
+  brandId: number,
+  data: UpdateBrandInput,
+  options?: Parameters<typeof customFetch>[1],
+): Promise<AdminBrand> => {
+  return customFetch<AdminBrand>(getUpdateBrandUrl(brandId), {
+    ...options,
+    method: 'PATCH',
+    headers: { 'Content-Type': 'application/json', ...options?.headers },
+    body: JSON.stringify(data),
+  });
+};
+
+export const useUpdateBrand = <TError = ErrorType<void>, TContext = unknown>(options?: {
+  mutation?: UseMutationOptions<AdminBrand, TError, { brandId: number; data: BodyType<UpdateBrandInput> }, TContext>;
+  request?: Parameters<typeof customFetch>[1];
+}): UseMutationResult<AdminBrand, TError, { brandId: number; data: BodyType<UpdateBrandInput> }, TContext> => {
+  const { mutation: mutationOptions, request: requestOptions } = options ?? {};
+  return useMutation({
+    mutationFn: ({ brandId, data }) => updateBrand(brandId, data, requestOptions),
+    ...mutationOptions,
+  });
+};
+
+// --- Delete a brand (admin only) ---
+
+export const getDeleteBrandUrl = (brandId: number) => `/api/admin/brands/${brandId}`;
+
+/**
+ * @summary Delete a brand (admin only)
+ */
+export const deleteBrand = async (
+  brandId: number,
+  options?: Parameters<typeof customFetch>[1],
+): Promise<{ success: boolean }> => {
+  return customFetch<{ success: boolean }>(getDeleteBrandUrl(brandId), { ...options, method: 'DELETE' });
+};
+
+export const useDeleteBrand = <TError = ErrorType<void>, TContext = unknown>(options?: {
+  mutation?: UseMutationOptions<{ success: boolean }, TError, { brandId: number }, TContext>;
+  request?: Parameters<typeof customFetch>[1];
+}): UseMutationResult<{ success: boolean }, TError, { brandId: number }, TContext> => {
+  const { mutation: mutationOptions, request: requestOptions } = options ?? {};
+  return useMutation({
+    mutationFn: ({ brandId }) => deleteBrand(brandId, requestOptions),
     ...mutationOptions,
   });
 };
