@@ -5,7 +5,7 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { Feather } from '@expo/vector-icons';
 import { useAuth, useUser } from '@clerk/expo';
 import { useColors } from '@/hooks/useColors';
-import { useListBrands } from '@workspace/api-client-react';
+import { useListBrands, useGetTrendingBrands } from '@workspace/api-client-react';
 
 const STEPS = [
   {
@@ -43,6 +43,7 @@ export function LandingScreen() {
   const [gridIntroOffset, setGridIntroOffset] = useState(0);
   const gridY = heroStepsHeight + whyBandHeight + gridIntroOffset;
   const { data: brands = [], isLoading } = useListBrands({});
+  const { data: trendingBrands = [] } = useGetTrendingBrands();
 
   // This screen renders at "/" for signed-in users too now (no more forced
   // redirect away from it — see app/index.tsx), so it's also how a signed-in
@@ -301,6 +302,53 @@ export function LandingScreen() {
               </View>
             ))}
           </View>
+
+          {/* Trending — top 3-5 by request volume in the last 7 (or 30,
+              if 7 days doesn't have enough data) days, recalculated once a
+              day server-side (see api-server/src/lib/trending.ts). Renders
+              nothing at all if the list is empty, rather than an empty
+              "Trending" heading with nothing under it (e.g. right after
+              launch, before a day's worth of data exists). */}
+          {trendingBrands.length > 0 && (
+            <View style={{ paddingHorizontal: hPad + 24, paddingBottom: isWide ? 64 : 44, gap: 14 }}>
+              <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8 }}>
+                <Feather name="trending-up" size={isWide ? 22 : 18} color={colors.accent} />
+                <Text style={{ color: colors.foreground, fontSize: isWide ? 24 : 20, fontWeight: '800' }}>
+                  Trending this week
+                </Text>
+              </View>
+              <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={{ gap: 12 }}>
+                {trendingBrands.map((brand: any) => (
+                  <View
+                    key={brand.id}
+                    style={{
+                      width: isWide ? 200 : 160,
+                      backgroundColor: colors.muted, borderRadius: 16,
+                      borderWidth: 1, borderColor: 'rgba(255,255,255,0.10)',
+                      padding: 14, gap: 8,
+                    }}
+                  >
+                    <View style={{
+                      width: 44, height: 44, borderRadius: 10, backgroundColor: '#FFFFFF',
+                      alignItems: 'center', justifyContent: 'center', overflow: 'hidden',
+                    }}>
+                      {brand.logoUrl ? (
+                        <Image source={{ uri: brand.logoUrl }} style={{ width: 34, height: 34 }} resizeMode="contain" />
+                      ) : (
+                        <Text style={{ fontSize: 15, fontWeight: '700' }}>{brand.name?.charAt(0)}</Text>
+                      )}
+                    </View>
+                    <Text style={{ color: colors.foreground, fontSize: 14, fontWeight: '600' }} numberOfLines={1}>
+                      {brand.name}
+                    </Text>
+                    <Text style={{ color: colors.accent, fontSize: 12 }} numberOfLines={2}>
+                      {brand.currentOffer || ' '}
+                    </Text>
+                  </View>
+                ))}
+              </ScrollView>
+            </View>
+          )}
         </View>
 
         {/* Why Round Robin — full-bleed band, centered inner column */}

@@ -2,6 +2,7 @@ import { Router, type IRouter } from "express";
 import { eq, and, ilike, sql } from "drizzle-orm";
 import { db, brandsTable, codesTable } from "@workspace/db";
 import { ListBrandsQueryParams, GetBrandParams } from "@workspace/api-zod";
+import { getTrendingBrands } from "../lib/trending";
 
 const router: IRouter = Router();
 
@@ -36,6 +37,24 @@ router.get("/brands", async (req, res): Promise<void> => {
     .orderBy(brandsTable.name);
 
   res.json(brands);
+});
+
+// Must come before /brands/:brandId — Express would otherwise match
+// "trending" as the :brandId param on that route instead of reaching this
+// one (GetBrandParams' zod.coerce.number() would then just 400 on it).
+router.get("/brands/trending", async (_req, res): Promise<void> => {
+  const brands = await getTrendingBrands();
+  res.json(
+    brands.map((b) => ({
+      id: b.id,
+      name: b.name,
+      logoUrl: b.logoUrl,
+      currentOffer: b.currentOffer,
+      offerUpdatedAt: b.offerUpdatedAt,
+      category: b.category,
+      active: b.active,
+    })),
+  );
 });
 
 router.get("/brands/:brandId", async (req, res): Promise<void> => {

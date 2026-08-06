@@ -1,6 +1,6 @@
 import { Router, type IRouter } from "express";
 import { eq, and } from "drizzle-orm";
-import { db, brandsTable, codesTable, queueStateTable, deviceCooldownsTable, codeReportsTable } from "@workspace/db";
+import { db, brandsTable, codesTable, queueStateTable, deviceCooldownsTable, codeReportsTable, codeServesTable } from "@workspace/db";
 import {
   GetNextCodeBody,
   ConfirmCopyBody,
@@ -114,6 +114,10 @@ router.post("/codes/next", requireAuth, async (req, res): Promise<void> => {
       .update(queueStateTable)
       .set({ cursor: newCursor })
       .where(eq(queueStateTable.brandId, brandId)),
+    // Timestamped event, distinct from the cumulative timesServed counter
+    // above — this is what makes "requests in the last N days" (trending)
+    // computable at all. See lib/trending.ts.
+    db.insert(codeServesTable).values({ brandId }),
   ]);
 
   // 5. Set device cooldown (upsert)
