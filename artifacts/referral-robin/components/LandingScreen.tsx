@@ -116,7 +116,11 @@ export function LandingScreen() {
 
             {isWide && (
               <View style={{ flexDirection: 'row', alignItems: 'center', gap: 32 }}>
-                <Pressable onPress={scrollToGrid}>
+                {/* Signed-in: straight to the real Explore screen — no reason
+                    to show the static preview grid when the functional one
+                    is one tap away. Signed-out: scroll to the preview, same
+                    as before (matches the hero CTA's same distinction). */}
+                <Pressable onPress={() => (isSignedIn ? router.push('/(home)/(tabs)') : scrollToGrid())}>
                   <Text style={{ color: colors.mutedForeground, fontSize: 14, fontWeight: '600' }}>Browse brands</Text>
                 </Pressable>
               </View>
