@@ -66,6 +66,24 @@ function AccountScreenInner() {
           <Feather name="chevron-right" size={20} color={colors.mutedForeground} />
         </Pressable>
 
+        {/* Client-side check is cosmetic only (hides the entry point from
+            non-admins) — actual enforcement is server-side, requireAdmin
+            against ADMIN_EMAILS. Keep this email in sync with that env var. */}
+        {user?.primaryEmailAddress?.emailAddress?.toLowerCase() === 'discountedbrands@gmail.com' && (
+          <Pressable
+            style={({ pressed }) => [
+              styles.row,
+              { backgroundColor: colors.card, borderColor: colors.border },
+              pressed && { opacity: 0.8 },
+            ]}
+            onPress={() => router.push('/(home)/admin/submit-brand')}
+          >
+            <Feather name="plus-circle" size={20} color={colors.foreground} />
+            <Text style={[styles.rowText, { color: colors.foreground }]}>Add a Company</Text>
+            <Feather name="chevron-right" size={20} color={colors.mutedForeground} />
+          </Pressable>
+        )}
+
         <Pressable
           style={({ pressed }) => [
             styles.row,

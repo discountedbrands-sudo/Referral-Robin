@@ -4,6 +4,7 @@ import brandsRouter from "./brands";
 import codesRouter from "./codes";
 import userRouter from "./user";
 import cooldownRouter from "./cooldown";
+import adminRouter from "./admin";
 
 const router = Router();
 
@@ -12,5 +13,6 @@ router.use(brandsRouter);
 router.use(codesRouter);
 router.use(userRouter);
 router.use(cooldownRouter);
+router.use(adminRouter);
 
 export default router;

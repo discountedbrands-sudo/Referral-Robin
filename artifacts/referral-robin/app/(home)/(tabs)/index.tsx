@@ -9,20 +9,9 @@ import { Feather, MaterialCommunityIcons } from '@expo/vector-icons';
 import { Link, useRouter } from 'expo-router';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { WEB_TAB_BAR_HEIGHT } from '@/components/WebTabBar';
+import { BRAND_CATEGORIES } from '@/constants/categories';
 
-const CATEGORIES = [
-  'All',
-  'Banking & Fintech',
-  'Investing & Crypto',
-  'Insurance',
-  'Gyms & Fitness',
-  'Medical & Weight Loss',
-  'Utilities',
-  'EV Charging',
-  'Retail & Cashback',
-  'Software & Apps',
-  'Travel & Money Transfer',
-];
+const CATEGORIES = ['All', ...BRAND_CATEGORIES];
 
 export default function ExploreScreen() {
   const colors = useColors();
@@ -245,7 +234,25 @@ export default function ExploreScreen() {
           </View>
         )}
 
-        {!isLoading && !isError && brands.length === 0 && (
+        {!isLoading && !isError && brands.length === 0 && search.trim() !== '' && (
+          <View style={{ alignItems: 'center', paddingTop: 60, gap: 12, paddingHorizontal: 32 }}>
+            <MaterialCommunityIcons name="magnify-close" size={48} color={colors.mutedForeground} />
+            <Text style={{ color: colors.foreground, fontSize: 17, textAlign: 'center' }}>
+              Can't find "{search.trim()}"?
+            </Text>
+            <Text style={{ color: colors.mutedForeground, fontSize: 14, textAlign: 'center' }}>
+              Add it now and be the first in the queue.
+            </Text>
+            <Pressable
+              onPress={() => router.push({ pathname: '/(home)/admin/submit-brand', params: { name: search.trim() } })}
+              style={{ backgroundColor: colors.primary, borderRadius: 12, paddingHorizontal: 20, paddingVertical: 12, marginTop: 4 }}
+            >
+              <Text style={{ color: '#fff', fontSize: 14, fontWeight: '700' }}>Add {search.trim()}</Text>
+            </Pressable>
+          </View>
+        )}
+
+        {!isLoading && !isError && brands.length === 0 && search.trim() === '' && (
           <View style={{ alignItems: 'center', paddingTop: 60, gap: 12 }}>
             <MaterialCommunityIcons name="magnify-close" size={48} color={colors.mutedForeground} />
             <Text style={{ color: colors.foreground, fontSize: 17, }}>No brands found</Text>
