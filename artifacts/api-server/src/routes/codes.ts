@@ -250,15 +250,23 @@ router.patch(
       return;
     }
 
-    const updates: { code?: string; expiresAt?: Date | null } = {};
+    const updates: { code?: string; expiresAt?: Date | null; status?: "active" | "paused" } = {};
     if (body.data.code !== undefined) updates.code = body.data.code;
     if (body.data.expiresAt !== undefined) updates.expiresAt = body.data.expiresAt;
+    if (body.data.status !== undefined) updates.status = body.data.status;
 
     const [updated] = await db
       .update(codesTable)
       .set(updates)
       .where(eq(codesTable.id, codeId))
       .returning();
+
+    // Status changes affect queue membership (rebuildQueue only pulls
+    // status="active" codes) — retiring/reactivating must take effect in
+    // the rotation immediately, not just in the owner's own dashboard view.
+    if (body.data.status !== undefined && body.data.status !== codeRow.status) {
+      await rebuildQueue(updated.brandId);
+    }
 
     const [brand] = await db
       .select()

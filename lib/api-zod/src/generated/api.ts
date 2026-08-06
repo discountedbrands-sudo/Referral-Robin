@@ -126,7 +126,12 @@ export const UpdateCodeParams = zod.object({
 
 export const UpdateCodeBody = zod.object({
   "code": zod.string().min(1).optional(),
-  "expiresAt": zod.coerce.date().nullish().describe('Optional expiry date for this code (ISO 8601)')
+  "expiresAt": zod.coerce.date().nullish().describe('Optional expiry date for this code (ISO 8601)'),
+  // Hand-added, not orval-generated (see @workspace/api-zod's admin.ts for
+  // why this repo's "generated" files get edited directly) — lets the owner
+  // retire/reactivate their own code (backlog idea #10). Deliberately
+  // excludes 'removed', which stays reserved for the report-moderation flow.
+  "status": zod.enum(['active', 'paused']).optional()
 })
 
 export const UpdateCodeResponse = zod.object({

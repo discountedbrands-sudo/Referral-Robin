@@ -48,6 +48,43 @@ function DashboardScreenInner() {
 
   const closeEdit = () => setEditingCode(null);
 
+  // Owner-initiated (idea #10) — distinct from the report-a-dead-code flow,
+  // which is other users flagging a code for moderation. Reuses the
+  // existing status enum's unused "paused" value rather than adding a new
+  // one; the UI just labels it "Retired" (see renderCode below). Setting
+  // status pulls the code out of the rotation queue immediately server-side
+  // (PATCH /codes/:codeId rebuilds the queue when status changes).
+  const setCodeStatus = (item: any, status: 'active' | 'paused') => {
+    updateCode.mutate(
+      { codeId: item.id, data: { status } },
+      {
+        onSuccess: () => {
+          queryClient.invalidateQueries({ queryKey: getGetUserCodesQueryKey() });
+        },
+        onError: (err: any) => {
+          const message = err?.data?.error || 'Failed to update code.';
+          if (Platform.OS === 'web') window.alert(message);
+          else Alert.alert('Error', message);
+        },
+      },
+    );
+  };
+
+  // Confirm only for retiring (destructive-feeling, pulls it from rotation)
+  // — reactivating is low-risk and immediate, same distinction the admin
+  // panel's Live toggle makes.
+  const handleRetire = (item: any) => {
+    const message = `Retire this ${item.brandName} code? It'll stop being served to other users immediately. You can reactivate it later.`;
+    if (Platform.OS === 'web') {
+      if (window.confirm(message)) setCodeStatus(item, 'paused');
+      return;
+    }
+    Alert.alert('Retire code', message, [
+      { text: 'Cancel', style: 'cancel' },
+      { text: 'Retire', style: 'destructive', onPress: () => setCodeStatus(item, 'paused') },
+    ]);
+  };
+
   const saveEdit = () => {
     if (!editingCode || !editCodeText.trim()) return;
 
@@ -79,24 +116,42 @@ function DashboardScreenInner() {
     );
   };
 
+  // "paused" is the existing status enum's owner-retire state (see
+  // setCodeStatus above) — labeled "RETIRED" here rather than exposing the
+  // raw DB value, since the enum name predates this feature. "removed" is
+  // a distinct, more serious state (report-moderation outcome, not
+  // something the owner toggles) so it gets its own look rather than
+  // sharing "paused"'s styling.
+  const statusMeta: Record<string, { label: string; bg: string; fg: string }> = {
+    active: { label: 'ACTIVE', bg: 'rgba(34, 197, 94, 0.15)', fg: '#4ade80' },
+    paused: { label: 'RETIRED', bg: colors.muted, fg: colors.mutedForeground },
+    removed: { label: 'REMOVED', bg: 'rgba(239, 68, 68, 0.15)', fg: '#ef4444' },
+  };
+
   const renderCode = ({ item }: { item: any }) => {
     const maskedCode = item.code.length > 4 ? `••••••${item.code.slice(-4)}` : item.code;
+    const meta = statusMeta[item.status] ?? statusMeta.paused;
     return (
       <View style={[styles.card, { backgroundColor: colors.card, borderColor: colors.border }]}>
         <View style={styles.cardHeader}>
           <Text style={[styles.brandName, { color: colors.foreground }]}>{item.brandName}</Text>
           <View style={{ flexDirection: 'row', alignItems: 'center', gap: 12 }}>
-            <View style={[
-              styles.statusBadge,
-              { backgroundColor: item.status === 'active' ? 'rgba(34, 197, 94, 0.15)' : colors.muted }
-            ]}>
-              <Text style={[
-                styles.statusText,
-                { color: item.status === 'active' ? '#4ade80' : colors.mutedForeground }
-              ]}>
-                {item.status.toUpperCase()}
-              </Text>
+            <View style={[styles.statusBadge, { backgroundColor: meta.bg }]}>
+              <Text style={[styles.statusText, { color: meta.fg }]}>{meta.label}</Text>
             </View>
+            {item.status !== 'removed' && (
+              <Pressable
+                onPress={() => (item.status === 'active' ? handleRetire(item) : setCodeStatus(item, 'active'))}
+                hitSlop={8}
+                disabled={updateCode.isPending}
+              >
+                <Feather
+                  name={item.status === 'active' ? 'pause-circle' : 'play-circle'}
+                  size={16}
+                  color={colors.mutedForeground}
+                />
+              </Pressable>
+            )}
             <Pressable onPress={() => openEdit(item)} hitSlop={8}>
               <Feather name="edit-2" size={16} color={colors.mutedForeground} />
             </Pressable>

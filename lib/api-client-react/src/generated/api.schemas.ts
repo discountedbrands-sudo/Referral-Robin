@@ -63,6 +63,8 @@ export interface UpdateCodeInput {
      * @nullable
      */
   expiresAt?: string | null;
+  /** Hand-added, not orval-generated — owner retire/reactivate (backlog idea #10) */
+  status?: 'active' | 'paused';
 }
 
 export interface ReportInput {
