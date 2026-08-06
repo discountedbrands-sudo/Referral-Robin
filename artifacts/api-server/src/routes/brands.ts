@@ -1,10 +1,18 @@
 import { Router, type IRouter } from "express";
+import type { Request } from "express";
 import { eq, and, ilike, sql } from "drizzle-orm";
 import { db, brandsTable, codesTable } from "@workspace/db";
-import { ListBrandsQueryParams, GetBrandParams } from "@workspace/api-zod";
+import { ListBrandsQueryParams, GetBrandParams, CreateBrandBody } from "@workspace/api-zod";
 import { getTrendingBrands } from "../lib/trending";
+import { requireAuth, isAdminUser } from "../lib/auth";
 
 const router: IRouter = Router();
+
+// Same token/pattern duplicated in seed.ts, the seed-batch-*.mjs scripts,
+// and admin.ts's edit route — see seed.ts for the logo.dev attribution note.
+const LOGO_DEV_TOKEN = "pk_BWwXndmOS_6o09K1eBTJnQ";
+const logoUrl = (domain: string) =>
+  `https://img.logo.dev/${domain}?token=${LOGO_DEV_TOKEN}&size=128&format=png`;
 
 router.get("/brands", async (req, res): Promise<void> => {
   const parsed = ListBrandsQueryParams.safeParse(req.query);
@@ -37,6 +45,45 @@ router.get("/brands", async (req, res): Promise<void> => {
     .orderBy(brandsTable.name);
 
   res.json(brands);
+});
+
+// POST /brands/submit — any signed-in user (idea #8, opened up beyond
+// admin-only). Admin submissions go live immediately, matching the
+// original admin-only behavior; everyone else's land as pending, invisible
+// on the public GET /brands until an admin approves it from the panel.
+router.post("/brands/submit", requireAuth, async (req: Request & { userId?: string }, res): Promise<void> => {
+  const parsed = CreateBrandBody.safeParse(req.body);
+  if (!parsed.success) {
+    res.status(400).json({ error: parsed.error.message });
+    return;
+  }
+
+  const { name, domain, category, currentOffer } = parsed.data;
+  const userId = req.userId!;
+  const admin = await isAdminUser(userId);
+
+  const [brand] = await db
+    .insert(brandsTable)
+    .values({
+      name,
+      logoUrl: logoUrl(domain),
+      category,
+      currentOffer,
+      active: admin,
+      submissionStatus: admin ? "approved" : "pending",
+      submittedBy: userId,
+    })
+    .returning();
+
+  res.status(201).json({
+    id: brand.id,
+    name: brand.name,
+    logoUrl: brand.logoUrl,
+    currentOffer: brand.currentOffer,
+    category: brand.category,
+    active: brand.active,
+    submissionStatus: brand.submissionStatus,
+  });
 });
 
 // Must come before /brands/:brandId — Express would otherwise match

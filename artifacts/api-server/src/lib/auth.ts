@@ -30,6 +30,22 @@ const ADMIN_EMAILS = (process.env.ADMIN_EMAILS ?? "")
   .filter(Boolean);
 
 /**
+ * Plain boolean check, reused by requireAdmin (below, for endpoints only
+ * admins may call at all) and by POST /brands/submit (which every signed-in
+ * user may call, but branches its *outcome* on this — admin submissions go
+ * straight to live, everyone else's land as pending).
+ */
+export async function isAdminUser(userId: string): Promise<boolean> {
+  try {
+    const user = await clerkClient.users.getUser(userId);
+    const email = user.primaryEmailAddress?.emailAddress?.toLowerCase();
+    return !!email && ADMIN_EMAILS.includes(email);
+  } catch {
+    return false;
+  }
+}
+
+/**
  * Middleware that requires the caller to be signed in AND have an email on
  * the ADMIN_EMAILS allowlist. Always call after (or combined with)
  * requireAuth-style logic — this checks auth itself too, so it's safe to use
@@ -47,14 +63,7 @@ export const requireAdmin = async (
     return;
   }
 
-  try {
-    const user = await clerkClient.users.getUser(userId);
-    const email = user.primaryEmailAddress?.emailAddress?.toLowerCase();
-    if (!email || !ADMIN_EMAILS.includes(email)) {
-      res.status(403).json({ error: "Forbidden" });
-      return;
-    }
-  } catch {
+  if (!(await isAdminUser(userId))) {
     res.status(403).json({ error: "Forbidden" });
     return;
   }

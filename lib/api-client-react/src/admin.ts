@@ -14,6 +14,11 @@ import type { ErrorType, BodyType } from './custom-fetch';
 // @workspace/api-zod's admin.ts for why (no codegen pipeline wired up in
 // this repo). Mirrors the same shape/conventions the generated hooks use.
 
+export type BrandSubmissionStatus = 'approved' | 'pending' | 'rejected';
+
+// --- Submit a brand (any signed-in user — admin submissions go live
+// immediately, everyone else's land as pending) ---
+
 export interface CreateBrandInput {
   name: string;
   domain: string;
@@ -28,12 +33,13 @@ export interface CreatedBrand {
   currentOffer?: string | null;
   category: string;
   active: boolean;
+  submissionStatus: BrandSubmissionStatus;
 }
 
-export const getCreateBrandUrl = () => `/api/admin/brands`;
+export const getCreateBrandUrl = () => `/api/brands/submit`;
 
 /**
- * @summary Create a new brand (admin only)
+ * @summary Submit a new brand — any signed-in user
  */
 export const createBrand = async (
   data: CreateBrandInput,
@@ -58,7 +64,7 @@ export const useCreateBrand = <TError = ErrorType<void>, TContext = unknown>(opt
   });
 };
 
-// --- List all brands (admin only — active and inactive) ---
+// --- List all brands (admin only — active, inactive, pending, rejected) ---
 
 export type AdminBrand = CreatedBrand;
 
@@ -127,6 +133,47 @@ export const useUpdateBrand = <TError = ErrorType<void>, TContext = unknown>(opt
   const { mutation: mutationOptions, request: requestOptions } = options ?? {};
   return useMutation({
     mutationFn: ({ brandId, data }) => updateBrand(brandId, data, requestOptions),
+    ...mutationOptions,
+  });
+};
+
+// --- Approve / reject a pending submission (admin only) ---
+
+export const getApproveBrandUrl = (brandId: number) => `/api/admin/brands/${brandId}/approve`;
+export const getRejectBrandUrl = (brandId: number) => `/api/admin/brands/${brandId}/reject`;
+
+export const approveBrand = async (
+  brandId: number,
+  options?: Parameters<typeof customFetch>[1],
+): Promise<AdminBrand> => {
+  return customFetch<AdminBrand>(getApproveBrandUrl(brandId), { ...options, method: 'POST' });
+};
+
+export const rejectBrand = async (
+  brandId: number,
+  options?: Parameters<typeof customFetch>[1],
+): Promise<AdminBrand> => {
+  return customFetch<AdminBrand>(getRejectBrandUrl(brandId), { ...options, method: 'POST' });
+};
+
+export const useApproveBrand = <TError = ErrorType<void>, TContext = unknown>(options?: {
+  mutation?: UseMutationOptions<AdminBrand, TError, { brandId: number }, TContext>;
+  request?: Parameters<typeof customFetch>[1];
+}): UseMutationResult<AdminBrand, TError, { brandId: number }, TContext> => {
+  const { mutation: mutationOptions, request: requestOptions } = options ?? {};
+  return useMutation({
+    mutationFn: ({ brandId }) => approveBrand(brandId, requestOptions),
+    ...mutationOptions,
+  });
+};
+
+export const useRejectBrand = <TError = ErrorType<void>, TContext = unknown>(options?: {
+  mutation?: UseMutationOptions<AdminBrand, TError, { brandId: number }, TContext>;
+  request?: Parameters<typeof customFetch>[1];
+}): UseMutationResult<AdminBrand, TError, { brandId: number }, TContext> => {
+  const { mutation: mutationOptions, request: requestOptions } = options ?? {};
+  return useMutation({
+    mutationFn: ({ brandId }) => rejectBrand(brandId, requestOptions),
     ...mutationOptions,
   });
 };

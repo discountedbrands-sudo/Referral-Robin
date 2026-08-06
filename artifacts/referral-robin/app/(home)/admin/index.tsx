@@ -5,7 +5,7 @@ import { useQueryClient } from '@tanstack/react-query';
 import { Feather } from '@expo/vector-icons';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useColors } from '@/hooks/useColors';
-import { useListBrandsAdmin, useDeleteBrand, getListBrandsQueryKey } from '@workspace/api-client-react';
+import { useListBrandsAdmin, useDeleteBrand, useApproveBrand, useRejectBrand, getListBrandsQueryKey } from '@workspace/api-client-react';
 import { AuthGate } from '@/components/AuthGate';
 import { WEB_TAB_BAR_HEIGHT } from '@/components/WebTabBar';
 
@@ -29,12 +29,25 @@ function AdminBrandsScreenInner() {
   const [search, setSearch] = useState('');
   const { data: brands = [], isLoading, isError, error } = useListBrandsAdmin();
   const deleteBrand = useDeleteBrand();
+  const approveBrand = useApproveBrand();
+  const rejectBrand = useRejectBrand();
 
   const isForbidden = (error as any)?.status === 403;
 
+  // Pending submissions float to the top — that's the queue an admin
+  // actually needs to work through; everything else is already settled.
+  const sortedBrands = [...brands].sort((a, b) => {
+    const aPending = a.submissionStatus === 'pending' ? 0 : 1;
+    const bPending = b.submissionStatus === 'pending' ? 0 : 1;
+    if (aPending !== bPending) return aPending - bPending;
+    return a.name.localeCompare(b.name);
+  });
+
   const filtered = search.trim()
-    ? brands.filter((b) => b.name.toLowerCase().includes(search.trim().toLowerCase()))
-    : brands;
+    ? sortedBrands.filter((b) => b.name.toLowerCase().includes(search.trim().toLowerCase()))
+    : sortedBrands;
+
+  const pendingCount = brands.filter((b) => b.submissionStatus === 'pending').length;
 
   const invalidateBrandLists = () => {
     queryClient.invalidateQueries({ queryKey: ['/api/admin/brands'] });
@@ -82,6 +95,47 @@ function AdminBrandsScreenInner() {
     ]);
   };
 
+  const onMutateErr = (err: any, fallback: string) => {
+    const message = err?.data?.error || fallback;
+    if (Platform.OS === 'web') window.alert(message);
+    else Alert.alert('Error', message);
+  };
+
+  // No confirm — approving is low-stakes and reversible (reject/edit after).
+  const handleApprove = (brand: (typeof brands)[number]) => {
+    approveBrand.mutate(
+      { brandId: brand.id },
+      { onSuccess: invalidateBrandLists, onError: (err: any) => onMutateErr(err, 'Failed to approve brand.') },
+    );
+  };
+
+  // Confirm — rejecting hides a real user's submission, worth a beat to undo a misclick.
+  const doReject = (brand: (typeof brands)[number]) => {
+    rejectBrand.mutate(
+      { brandId: brand.id },
+      { onSuccess: invalidateBrandLists, onError: (err: any) => onMutateErr(err, 'Failed to reject brand.') },
+    );
+  };
+
+  const handleReject = (brand: (typeof brands)[number]) => {
+    const message = `Reject ${brand.name}? It'll stay hidden but you can still approve it later.`;
+    if (Platform.OS === 'web') {
+      if (window.confirm(message)) doReject(brand);
+      return;
+    }
+    Alert.alert('Reject submission', message, [
+      { text: 'Cancel', style: 'cancel' },
+      { text: 'Reject', style: 'destructive', onPress: () => doReject(brand) },
+    ]);
+  };
+
+  const statusMeta = (brand: (typeof brands)[number]) => {
+    if (brand.submissionStatus === 'pending') return { label: 'PENDING REVIEW', bg: 'rgba(245, 158, 11, 0.15)', fg: '#f59e0b' };
+    if (brand.submissionStatus === 'rejected') return { label: 'REJECTED', bg: 'rgba(239, 68, 68, 0.15)', fg: '#ef4444' };
+    if (brand.active) return { label: 'ACTIVE', bg: 'rgba(34, 197, 94, 0.15)', fg: '#4ade80' };
+    return { label: 'HIDDEN', bg: colors.muted, fg: colors.mutedForeground };
+  };
+
   return (
     <View style={{ flex: 1, backgroundColor: colors.background }}>
       <View
@@ -96,7 +150,9 @@ function AdminBrandsScreenInner() {
         <Pressable onPress={() => router.back()} style={{ width: 44, height: 44, justifyContent: 'center', alignItems: 'center' }}>
           <Feather name="x" size={24} color={colors.foreground} />
         </Pressable>
-        <Text style={{ fontSize: 18, color: colors.foreground, fontWeight: '700' }}>Admin: Brands</Text>
+        <Text style={{ fontSize: 18, color: colors.foreground, fontWeight: '700' }}>
+          Admin: Brands{pendingCount > 0 ? ` (${pendingCount} pending)` : ''}
+        </Text>
         <Pressable
           onPress={() => router.push('/(home)/admin/submit-brand')}
           style={{ width: 44, height: 44, justifyContent: 'center', alignItems: 'center' }}
@@ -179,12 +235,33 @@ function AdminBrandsScreenInner() {
 
                 <View style={{
                   paddingHorizontal: 8, paddingVertical: 3, borderRadius: 8,
-                  backgroundColor: item.active ? 'rgba(34, 197, 94, 0.15)' : colors.muted,
+                  backgroundColor: statusMeta(item).bg,
                 }}>
-                  <Text style={{ fontSize: 11, color: item.active ? '#4ade80' : colors.mutedForeground, fontWeight: '600' }}>
-                    {item.active ? 'ACTIVE' : 'HIDDEN'}
+                  <Text style={{ fontSize: 11, color: statusMeta(item).fg, fontWeight: '600' }}>
+                    {statusMeta(item).label}
                   </Text>
                 </View>
+
+                {item.submissionStatus === 'pending' && (
+                  <>
+                    <Pressable
+                      onPress={() => handleApprove(item)}
+                      hitSlop={8}
+                      style={{ padding: 4 }}
+                      disabled={approveBrand.isPending}
+                    >
+                      <Feather name="check-circle" size={18} color="#4ade80" />
+                    </Pressable>
+                    <Pressable
+                      onPress={() => handleReject(item)}
+                      hitSlop={8}
+                      style={{ padding: 4 }}
+                      disabled={rejectBrand.isPending}
+                    >
+                      <Feather name="x-circle" size={18} color={colors.destructive} />
+                    </Pressable>
+                  </>
+                )}
 
                 <Pressable onPress={() => handleEdit(item)} hitSlop={8} style={{ padding: 4 }}>
                   <Feather name="edit-2" size={18} color={colors.mutedForeground} />

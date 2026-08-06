@@ -18,10 +18,15 @@ export default function AddCompanyScreen() {
   );
 }
 
-// Admin-only enforcement is server-side (requireAdmin in api-server) — this
-// screen doesn't try to duplicate that check client-side. "Start simple, no
-// review queue yet" (backlog idea #8): any signed-in non-admin who reaches
-// this just gets a 403 back on submit, surfaced as a plain error message.
+// Create mode is open to any signed-in user (idea #8, opened up beyond
+// admin-only) — the server decides the outcome: admin submissions go live
+// immediately, everyone else's land as pending review (see
+// POST /brands/submit). This screen doesn't need to know which case it is
+// ahead of time, just react to submissionStatus in the response.
+//
+// Edit mode stays admin-only (requireAdmin server-side) — this screen
+// doesn't duplicate that check client-side either; a non-admin who somehow
+// reaches edit mode just gets a 403 surfaced as a plain error message.
 //
 // Doubles as the edit screen: the admin panel navigates here with a
 // brandId (+ current field values as params, avoiding a second fetch —
@@ -53,10 +58,9 @@ function AddCompanyScreenInner() {
   const handleSubmit = () => {
     if (!canSubmit || !category) return;
 
-    const onOk = (verb: string) => {
-      const message = `${name.trim()} has been ${verb}.`;
+    const notify = (title: string, message: string) => {
       if (Platform.OS === 'web') window.alert(message);
-      else Alert.alert(isEdit ? 'Saved' : 'Added', message);
+      else Alert.alert(title, message);
       queryClient.invalidateQueries({ queryKey: ['/api/admin/brands'] });
       queryClient.invalidateQueries({ queryKey: getListBrandsQueryKey() });
       router.back();
@@ -80,12 +84,21 @@ function AddCompanyScreenInner() {
             active,
           },
         },
-        { onSuccess: () => onOk('updated'), onError: (err) => onErr(err, 'Failed to save changes.') },
+        { onSuccess: () => notify('Saved', `${name.trim()} has been updated.`), onError: (err) => onErr(err, 'Failed to save changes.') },
       );
     } else {
       createBrand.mutate(
         { data: { name: name.trim(), domain: domain.trim(), category, currentOffer: offer.trim() } },
-        { onSuccess: () => onOk('added and is live'), onError: (err) => onErr(err, 'Failed to add company.') },
+        {
+          onSuccess: (data) => {
+            const message =
+              data.submissionStatus === 'approved'
+                ? `${name.trim()} has been added and is live.`
+                : `${name.trim()} has been submitted for review. We'll let you know once it's approved.`;
+            notify(data.submissionStatus === 'approved' ? 'Added' : 'Submitted', message);
+          },
+          onError: (err) => onErr(err, 'Failed to add company.'),
+        },
       );
     }
   };

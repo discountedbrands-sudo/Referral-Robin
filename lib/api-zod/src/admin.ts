@@ -7,7 +7,8 @@ import * as zod from "zod";
 // header claims "Do not edit manually".
 
 /**
- * @summary Create a new brand (admin only)
+ * @summary Submit a new brand — any signed-in user. Admin submissions go
+ * live immediately; everyone else's land as pending review.
  */
 export const CreateBrandBody = zod.object({
   name: zod.string().min(1),
@@ -16,6 +17,8 @@ export const CreateBrandBody = zod.object({
   currentOffer: zod.string().min(1),
 });
 
+export const BrandSubmissionStatus = zod.enum(["approved", "pending", "rejected"]);
+
 export const CreateBrandResponse = zod.object({
   id: zod.number(),
   name: zod.string(),
@@ -23,6 +26,7 @@ export const CreateBrandResponse = zod.object({
   currentOffer: zod.string().nullish(),
   category: zod.string(),
   active: zod.boolean(),
+  submissionStatus: BrandSubmissionStatus,
 });
 
 /**
@@ -35,6 +39,7 @@ export const AdminBrandListItem = zod.object({
   currentOffer: zod.string().nullish(),
   category: zod.string(),
   active: zod.boolean(),
+  submissionStatus: BrandSubmissionStatus,
 });
 export const AdminBrandListResponse = zod.array(AdminBrandListItem);
 
@@ -54,6 +59,11 @@ export const UpdateBrandBody = zod.object({
 });
 
 export const UpdateBrandResponse = CreateBrandResponse;
+
+/**
+ * @summary Approve or reject a pending brand submission (admin only)
+ */
+export const ReviewBrandResponse = CreateBrandResponse;
 
 /**
  * @summary Delete a brand (admin only)
