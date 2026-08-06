@@ -111,7 +111,13 @@ export function LandingScreen() {
           >
             <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8 }}>
               <Logo name="repeat" />
-              <Text style={{ color: colors.foreground, fontSize: 16, fontWeight: '700' }}>Referral Robin</Text>
+              {/* Wordmark drops below ~400px, not the auth actions — the icon
+                  alone still reads as branding and still links home; losing
+                  "Sign in" instead would leave narrow-web users with no way
+                  to sign in from the nav at all. */}
+              {!isNarrowNav && (
+                <Text style={{ color: colors.foreground, fontSize: 16, fontWeight: '700' }}>Referral Robin</Text>
+              )}
             </View>
 
             {isWide && (
@@ -153,15 +159,9 @@ export function LandingScreen() {
                 </>
               ) : (
                 <>
-                  {/* Dropped below ~400px — not enough room for logo + wordmark +
-                      "Sign in" + the sign-up pill on one row, and this row has
-                      no wrap fallback. The pill alone is the one action that
-                      actually needs to survive at any width. */}
-                  {!isNarrowNav && (
-                    <Pressable onPress={() => router.push('/(auth)/sign-in')} style={{ paddingVertical: 8, paddingHorizontal: 4 }}>
-                      <Text style={{ color: colors.foreground, fontSize: 14, fontWeight: '600' }}>Sign in</Text>
-                    </Pressable>
-                  )}
+                  <Pressable onPress={() => router.push('/(auth)/sign-in')} style={{ paddingVertical: 8, paddingHorizontal: isNarrowNav ? 0 : 4 }}>
+                    <Text style={{ color: colors.foreground, fontSize: 14, fontWeight: '600' }}>Sign in</Text>
+                  </Pressable>
                   <Pressable
                     onPress={() => router.push('/(auth)/sign-up')}
                     style={({ pressed }) => ({
