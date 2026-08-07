@@ -1,4 +1,4 @@
-import { Redirect, useLocalSearchParams } from 'expo-router';
+import { Redirect } from 'expo-router';
 import { useAuth } from '@clerk/expo';
 import { LandingScreen } from '@/components/LandingScreen';
 
@@ -17,11 +17,6 @@ function GatedIndex() {
 }
 
 export default function Index() {
-  // Temporary — verifies the ErrorBoundary -> Sentry.captureException path.
-  // Remove after confirming the event lands in Sentry.
-  const { sentryTest } = useLocalSearchParams<{ sentryTest?: string }>();
-  if (sentryTest) throw new Error('Sentry frontend test error — safe to ignore, verifying error monitoring setup');
-
   if (!hasClerk) return <Redirect href="/(home)/(tabs)" />;
   return <GatedIndex />;
 }
