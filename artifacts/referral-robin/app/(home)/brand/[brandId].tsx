@@ -215,6 +215,20 @@ export default function BrandRevealScreen() {
 
   const isOnCooldown = timeLeft > 0;
 
+  // Some brands' "codes" are actually referral links. Rendering a long URL
+  // at the same large, letter-spaced size as a short code wraps badly and
+  // breaks the card's layout — show just the domain (or nothing) instead,
+  // and let the button do the work.
+  let linkDomain: string | null = null;
+  if (revealedCode) {
+    try {
+      linkDomain = new URL(revealedCode.code).hostname.replace(/^www\./, '');
+    } catch {
+      linkDomain = null;
+    }
+  }
+  const isLink = linkDomain !== null;
+
   return (
     <>
       {seoHead}
@@ -273,11 +287,19 @@ export default function BrandRevealScreen() {
         ) : (
           <View style={styles.revealSection}>
             <View style={[styles.codeCard, { backgroundColor: colors.card, borderColor: colors.border }]}>
-              <Text style={[styles.codeLabel, { color: colors.secondaryForeground }]}>Your Referral Code</Text>
-              <Text style={[styles.revealedCodeText, { color: colors.foreground }]} selectable>
-                {revealedCode.code}
+              <Text style={[styles.codeLabel, { color: colors.secondaryForeground }]}>
+                {isLink ? 'Your Referral Link' : 'Your Referral Code'}
               </Text>
-              
+              {isLink ? (
+                <Text style={[styles.linkDomainText, { color: colors.mutedForeground }]} numberOfLines={1}>
+                  {linkDomain}
+                </Text>
+              ) : (
+                <Text style={[styles.revealedCodeText, { color: colors.foreground }]} selectable>
+                  {revealedCode.code}
+                </Text>
+              )}
+
               <Pressable
                 style={({ pressed }) => [
                   styles.copyButton,
@@ -286,9 +308,9 @@ export default function BrandRevealScreen() {
                 ]}
                 onPress={handleCopy}
               >
-                <Feather name={copied ? "check" : "copy"} size={20} color={colors.primaryForeground} />
+                <Feather name={copied ? "check" : isLink ? "link-2" : "copy"} size={20} color={colors.primaryForeground} />
                 <Text style={[styles.copyButtonText, { color: colors.primaryForeground }]}>
-                  {copied ? "Copied!" : "Copy Code"}
+                  {copied ? "Copied!" : isLink ? "Copy Link" : "Copy Code"}
                 </Text>
               </Pressable>
             </View>
@@ -396,6 +418,10 @@ const styles = StyleSheet.create({
   revealedCodeText: {
     fontSize: 32,
     letterSpacing: 2,
+    textAlign: 'center',
+  },
+  linkDomainText: {
+    fontSize: 16,
     textAlign: 'center',
   },
   copyButton: {
