@@ -5,6 +5,7 @@ import codesRouter from "./codes";
 import userRouter from "./user";
 import cooldownRouter from "./cooldown";
 import adminRouter from "./admin";
+import debugSentryRouter from "./debugSentry";
 
 const router = Router();
 
@@ -14,5 +15,6 @@ router.use(codesRouter);
 router.use(userRouter);
 router.use(cooldownRouter);
 router.use(adminRouter);
+router.use(debugSentryRouter);
 
 export default router;
