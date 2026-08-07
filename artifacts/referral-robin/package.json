@@ -6,6 +6,7 @@
   "scripts": {
     "dev": "node ./scripts/dev.mjs",
     "build": "node scripts/build.js",
+    "export:web": "node scripts/generate-sitemap.mjs && expo export -p web && node scripts/inject-brand-seo.mjs",
     "serve": "node server/serve.js",
     "typecheck": "tsc -p tsconfig.json --noEmit",
     "android": "expo run:android",
@@ -61,9 +62,10 @@
     "zod-validation-error": "^3.4.0"
   },
   "dependencies": {
+    "@vercel/analytics": "^2.0.1",
+    "expo": "~54.0.36",
     "expo-clipboard": "^8.0.8",
     "expo-dev-client": "~6.0.21",
-    "expo": "~54.0.36",
     "react": "19.1.0",
     "react-native": "0.81.5"
   },

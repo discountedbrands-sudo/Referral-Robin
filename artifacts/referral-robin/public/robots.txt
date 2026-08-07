@@ -1,0 +1,9 @@
+User-agent: *
+Allow: /
+Disallow: /admin
+Disallow: /dashboard
+Disallow: /account
+Disallow: /sign-in
+Disallow: /sign-up
+
+Sitemap: https://referralrobin.com/sitemap.xml
