@@ -3,6 +3,541 @@
   "outputDirectory": "dist",
   "cleanUrls": true,
   "rewrites": [
-    { "source": "/brand/:slug", "destination": "/brand/[slug].html" }
+    {
+      "source": "/brand/:slug",
+      "destination": "/brand/%5Bslug%5D.html"
+    }
+  ],
+  "redirects": [
+    {
+      "source": "/brand/1",
+      "destination": "/brand/monzo",
+      "permanent": true
+    },
+    {
+      "source": "/brand/2",
+      "destination": "/brand/revolut",
+      "permanent": true
+    },
+    {
+      "source": "/brand/3",
+      "destination": "/brand/starling-bank",
+      "permanent": true
+    },
+    {
+      "source": "/brand/4",
+      "destination": "/brand/chase-uk",
+      "permanent": true
+    },
+    {
+      "source": "/brand/5",
+      "destination": "/brand/wise",
+      "permanent": true
+    },
+    {
+      "source": "/brand/6",
+      "destination": "/brand/curve",
+      "permanent": true
+    },
+    {
+      "source": "/brand/7",
+      "destination": "/brand/freetrade",
+      "permanent": true
+    },
+    {
+      "source": "/brand/8",
+      "destination": "/brand/trading-212",
+      "permanent": true
+    },
+    {
+      "source": "/brand/9",
+      "destination": "/brand/coinbase",
+      "permanent": true
+    },
+    {
+      "source": "/brand/10",
+      "destination": "/brand/kraken",
+      "permanent": true
+    },
+    {
+      "source": "/brand/11",
+      "destination": "/brand/etoro",
+      "permanent": true
+    },
+    {
+      "source": "/brand/12",
+      "destination": "/brand/chip",
+      "permanent": true
+    },
+    {
+      "source": "/brand/13",
+      "destination": "/brand/tide",
+      "permanent": true
+    },
+    {
+      "source": "/brand/14",
+      "destination": "/brand/american-express",
+      "permanent": true
+    },
+    {
+      "source": "/brand/15",
+      "destination": "/brand/yonder",
+      "permanent": true
+    },
+    {
+      "source": "/brand/16",
+      "destination": "/brand/zilch",
+      "permanent": true
+    },
+    {
+      "source": "/brand/17",
+      "destination": "/brand/admiral",
+      "permanent": true
+    },
+    {
+      "source": "/brand/18",
+      "destination": "/brand/direct-line",
+      "permanent": true
+    },
+    {
+      "source": "/brand/19",
+      "destination": "/brand/sainsbury-s-bank",
+      "permanent": true
+    },
+    {
+      "source": "/brand/20",
+      "destination": "/brand/aviva",
+      "permanent": true
+    },
+    {
+      "source": "/brand/21",
+      "destination": "/brand/rac",
+      "permanent": true
+    },
+    {
+      "source": "/brand/22",
+      "destination": "/brand/lv",
+      "permanent": true
+    },
+    {
+      "source": "/brand/23",
+      "destination": "/brand/puregym",
+      "permanent": true
+    },
+    {
+      "source": "/brand/24",
+      "destination": "/brand/active-mid-devon",
+      "permanent": true
+    },
+    {
+      "source": "/brand/25",
+      "destination": "/brand/virgin-active",
+      "permanent": true
+    },
+    {
+      "source": "/brand/27",
+      "destination": "/brand/sky",
+      "permanent": true
+    },
+    {
+      "source": "/brand/28",
+      "destination": "/brand/virgin-media",
+      "permanent": true
+    },
+    {
+      "source": "/brand/29",
+      "destination": "/brand/e-on",
+      "permanent": true
+    },
+    {
+      "source": "/brand/30",
+      "destination": "/brand/bt",
+      "permanent": true
+    },
+    {
+      "source": "/brand/31",
+      "destination": "/brand/adidas",
+      "permanent": true
+    },
+    {
+      "source": "/brand/32",
+      "destination": "/brand/joe-browns",
+      "permanent": true
+    },
+    {
+      "source": "/brand/33",
+      "destination": "/brand/kate-s-clothing",
+      "permanent": true
+    },
+    {
+      "source": "/brand/34",
+      "destination": "/brand/quidco",
+      "permanent": true
+    },
+    {
+      "source": "/brand/35",
+      "destination": "/brand/topcashback",
+      "permanent": true
+    },
+    {
+      "source": "/brand/36",
+      "destination": "/brand/nordvpn",
+      "permanent": true
+    },
+    {
+      "source": "/brand/37",
+      "destination": "/brand/dropbox",
+      "permanent": true
+    },
+    {
+      "source": "/brand/42",
+      "destination": "/brand/zopa",
+      "permanent": true
+    },
+    {
+      "source": "/brand/43",
+      "destination": "/brand/monese",
+      "permanent": true
+    },
+    {
+      "source": "/brand/44",
+      "destination": "/brand/emma",
+      "permanent": true
+    },
+    {
+      "source": "/brand/45",
+      "destination": "/brand/gemsloot",
+      "permanent": true
+    },
+    {
+      "source": "/brand/46",
+      "destination": "/brand/rakuten",
+      "permanent": true
+    },
+    {
+      "source": "/brand/47",
+      "destination": "/brand/jamdoughnut",
+      "permanent": true
+    },
+    {
+      "source": "/brand/48",
+      "destination": "/brand/everup",
+      "permanent": true
+    },
+    {
+      "source": "/brand/49",
+      "destination": "/brand/attraction-tickets",
+      "permanent": true
+    },
+    {
+      "source": "/brand/50",
+      "destination": "/brand/gousto",
+      "permanent": true
+    },
+    {
+      "source": "/brand/51",
+      "destination": "/brand/testing-time",
+      "permanent": true
+    },
+    {
+      "source": "/brand/52",
+      "destination": "/brand/smol",
+      "permanent": true
+    },
+    {
+      "source": "/brand/53",
+      "destination": "/brand/aj-bell",
+      "permanent": true
+    },
+    {
+      "source": "/brand/54",
+      "destination": "/brand/airtime-rewards",
+      "permanent": true
+    },
+    {
+      "source": "/brand/55",
+      "destination": "/brand/motorway",
+      "permanent": true
+    },
+    {
+      "source": "/brand/56",
+      "destination": "/brand/trainpal",
+      "permanent": true
+    },
+    {
+      "source": "/brand/57",
+      "destination": "/brand/skrill",
+      "permanent": true
+    },
+    {
+      "source": "/brand/58",
+      "destination": "/brand/kendamil",
+      "permanent": true
+    },
+    {
+      "source": "/brand/59",
+      "destination": "/brand/park-christmas",
+      "permanent": true
+    },
+    {
+      "source": "/brand/60",
+      "destination": "/brand/respondent",
+      "permanent": true
+    },
+    {
+      "source": "/brand/61",
+      "destination": "/brand/arran-sense-of-scotland",
+      "permanent": true
+    },
+    {
+      "source": "/brand/62",
+      "destination": "/brand/beanstalk",
+      "permanent": true
+    },
+    {
+      "source": "/brand/63",
+      "destination": "/brand/sprive",
+      "permanent": true
+    },
+    {
+      "source": "/brand/64",
+      "destination": "/brand/voi",
+      "permanent": true
+    },
+    {
+      "source": "/brand/65",
+      "destination": "/brand/lemfi",
+      "permanent": true
+    },
+    {
+      "source": "/brand/66",
+      "destination": "/brand/caffe-nero",
+      "permanent": true
+    },
+    {
+      "source": "/brand/67",
+      "destination": "/brand/currensea",
+      "permanent": true
+    },
+    {
+      "source": "/brand/68",
+      "destination": "/brand/user-interviews",
+      "permanent": true
+    },
+    {
+      "source": "/brand/69",
+      "destination": "/brand/kit-kin",
+      "permanent": true
+    },
+    {
+      "source": "/brand/70",
+      "destination": "/brand/charles-stanley",
+      "permanent": true
+    },
+    {
+      "source": "/brand/71",
+      "destination": "/brand/avios",
+      "permanent": true
+    },
+    {
+      "source": "/brand/72",
+      "destination": "/brand/trip-com",
+      "permanent": true
+    },
+    {
+      "source": "/brand/73",
+      "destination": "/brand/worldremit",
+      "permanent": true
+    },
+    {
+      "source": "/brand/74",
+      "destination": "/brand/sous-chef",
+      "permanent": true
+    },
+    {
+      "source": "/brand/75",
+      "destination": "/brand/perfume-direct",
+      "permanent": true
+    },
+    {
+      "source": "/brand/76",
+      "destination": "/brand/kidstart",
+      "permanent": true
+    },
+    {
+      "source": "/brand/77",
+      "destination": "/brand/uber",
+      "permanent": true
+    },
+    {
+      "source": "/brand/78",
+      "destination": "/brand/taptap-send",
+      "permanent": true
+    },
+    {
+      "source": "/brand/79",
+      "destination": "/brand/costa-coffee",
+      "permanent": true
+    },
+    {
+      "source": "/brand/80",
+      "destination": "/brand/fidelity",
+      "permanent": true
+    },
+    {
+      "source": "/brand/81",
+      "destination": "/brand/simmer",
+      "permanent": true
+    },
+    {
+      "source": "/brand/82",
+      "destination": "/brand/interactive-investor",
+      "permanent": true
+    },
+    {
+      "source": "/brand/83",
+      "destination": "/brand/swagbucks",
+      "permanent": true
+    },
+    {
+      "source": "/brand/84",
+      "destination": "/brand/uber-eats",
+      "permanent": true
+    },
+    {
+      "source": "/brand/85",
+      "destination": "/brand/gr-um",
+      "permanent": true
+    },
+    {
+      "source": "/brand/86",
+      "destination": "/brand/investengine",
+      "permanent": true
+    },
+    {
+      "source": "/brand/87",
+      "destination": "/brand/penfold",
+      "permanent": true
+    },
+    {
+      "source": "/brand/88",
+      "destination": "/brand/virgin-red",
+      "permanent": true
+    },
+    {
+      "source": "/brand/89",
+      "destination": "/brand/pensionbee",
+      "permanent": true
+    },
+    {
+      "source": "/brand/90",
+      "destination": "/brand/picodi",
+      "permanent": true
+    },
+    {
+      "source": "/brand/91",
+      "destination": "/brand/robinhood",
+      "permanent": true
+    },
+    {
+      "source": "/brand/92",
+      "destination": "/brand/wahed-invest",
+      "permanent": true
+    },
+    {
+      "source": "/brand/93",
+      "destination": "/brand/myprotein",
+      "permanent": true
+    },
+    {
+      "source": "/brand/94",
+      "destination": "/brand/glasses-direct",
+      "permanent": true
+    },
+    {
+      "source": "/brand/95",
+      "destination": "/brand/eufy",
+      "permanent": true
+    },
+    {
+      "source": "/brand/96",
+      "destination": "/brand/lookfantastic",
+      "permanent": true
+    },
+    {
+      "source": "/brand/97",
+      "destination": "/brand/cult-beauty",
+      "permanent": true
+    },
+    {
+      "source": "/brand/98",
+      "destination": "/brand/glossybox",
+      "permanent": true
+    },
+    {
+      "source": "/brand/99",
+      "destination": "/brand/octopus-electroverse",
+      "permanent": true
+    },
+    {
+      "source": "/brand/104",
+      "destination": "/brand/motoreasy",
+      "permanent": true
+    },
+    {
+      "source": "/brand/107",
+      "destination": "/brand/smarty",
+      "permanent": true
+    },
+    {
+      "source": "/brand/108",
+      "destination": "/brand/zable",
+      "permanent": true
+    },
+    {
+      "source": "/brand/109",
+      "destination": "/brand/giffgaff",
+      "permanent": true
+    },
+    {
+      "source": "/brand/110",
+      "destination": "/brand/voxi",
+      "permanent": true
+    },
+    {
+      "source": "/brand/111",
+      "destination": "/brand/lebara",
+      "permanent": true
+    },
+    {
+      "source": "/brand/112",
+      "destination": "/brand/lloyds-bank",
+      "permanent": true
+    },
+    {
+      "source": "/brand/113",
+      "destination": "/brand/whatnot",
+      "permanent": true
+    },
+    {
+      "source": "/brand/114",
+      "destination": "/brand/nuffield-health",
+      "permanent": true
+    },
+    {
+      "source": "/brand/115",
+      "destination": "/brand/david-lloyd-clubs",
+      "permanent": true
+    },
+    {
+      "source": "/brand/118",
+      "destination": "/brand/raisin-uk",
+      "permanent": true
+    },
+    {
+      "source": "/brand/120",
+      "destination": "/brand/bolt-pharmacy",
+      "permanent": true
+    }
   ]
 }
