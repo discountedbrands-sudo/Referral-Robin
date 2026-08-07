@@ -62,9 +62,10 @@
     "zod-validation-error": "^3.4.0"
   },
   "dependencies": {
+    "@vercel/analytics": "^2.0.1",
+    "expo": "~54.0.36",
     "expo-clipboard": "^8.0.8",
     "expo-dev-client": "~6.0.21",
-    "expo": "~54.0.36",
     "react": "19.1.0",
     "react-native": "0.81.5"
   },

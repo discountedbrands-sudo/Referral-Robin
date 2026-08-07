@@ -12,6 +12,7 @@ import { tokenCache } from '@clerk/expo/token-cache';
 import { setBaseUrl, setAuthTokenGetter } from '@workspace/api-client-react';
 import { DeviceProvider } from '@/context/DeviceContext';
 import { SITE_URL, DEFAULT_TITLE, DEFAULT_DESCRIPTION, OG_IMAGE, API_BASE_URL } from '@/constants/seo';
+import { Analytics } from '@vercel/analytics/react';
 
 SplashScreen.preventAutoHideAsync();
 
@@ -82,6 +83,7 @@ function AppShell() {
         <DeviceProvider>
           <ErrorBoundary>
             <SiteHead />
+            {Platform.OS === 'web' && <Analytics />}
             {Platform.OS === 'web' ? (
               <Stack screenOptions={{ headerShown: false, contentStyle: { backgroundColor: '#0F1117' } }} />
             ) : (
