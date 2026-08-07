@@ -1,6 +1,7 @@
 import React from 'react';
 import { View, Text, Pressable, ScrollView, Platform, useWindowDimensions } from 'react-native';
 import { useRouter } from 'expo-router';
+import Head from 'expo-router/head';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { Feather } from '@expo/vector-icons';
 import { useColors } from '@/hooks/useColors';
@@ -29,7 +30,13 @@ export function LegalPage({
   const isWide = Platform.OS === 'web' && width >= WIDE_BREAKPOINT;
 
   return (
-    <View style={{ flex: 1, backgroundColor: colors.background }}>
+    <>
+      {Platform.OS === 'web' && (
+        <Head>
+          <title>{title}</title>
+        </Head>
+      )}
+      <View style={{ flex: 1, backgroundColor: colors.background }}>
       <View
         style={{
           flexDirection: 'row',
@@ -85,5 +92,6 @@ export function LegalPage({
         </View>
       </ScrollView>
     </View>
+    </>
   );
 }

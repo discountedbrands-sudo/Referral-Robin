@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { View, Text, StyleSheet, Pressable, ActivityIndicator, Alert, Platform } from 'react-native';
 import { useLocalSearchParams, useRouter } from 'expo-router';
+import Head from 'expo-router/head';
 import { useAuth } from '@clerk/expo';
 import { useColors } from '@/hooks/useColors';
 import { useGetBrand, useGetCooldown, useGetNextCode, useConfirmCopy, useReportCode, getGetBrandQueryKey, getGetCooldownQueryKey } from '@workspace/api-client-react';
@@ -9,6 +10,30 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useDevice } from '@/context/DeviceContext';
 import * as Clipboard from 'expo-clipboard';
 import * as Haptics from 'expo-haptics';
+import { API_BASE_URL, SITE_URL, OG_IMAGE } from '@/constants/seo';
+
+// Static export (web.output: "static") pre-renders one real HTML file per ID
+// returned here — but only the IDs, not any other data: Expo Router's
+// static renderer resets global/module state between pages and never awaits
+// this component's own async data fetch (useGetBrand below), so the actual
+// per-brand title/description/OG values can't reach the raw HTML from here.
+// scripts/inject-brand-seo.mjs rewrites those tags into each generated
+// dist/brand/{id}.html after `expo export` using the same brand list, which
+// is what actually fixes it for social link-preview bots (they don't run
+// JS, so this component's own <Head> below only ever helps browser tab
+// titles + JS-executing crawlers). IDs not covered here (brands added after
+// the last deploy) fall back to the generic `[brandId].html` shell; see
+// vercel.json's rewrite for that.
+export async function generateStaticParams() {
+  try {
+    const res = await fetch(`${API_BASE_URL}/api/brands`);
+    if (!res.ok) return [];
+    const brands: { id: number; active: boolean }[] = await res.json();
+    return brands.filter((b) => b.active).map((b) => ({ brandId: String(b.id) }));
+  } catch {
+    return [];
+  }
+}
 
 export default function BrandRevealScreen() {
   const { brandId } = useLocalSearchParams<{ brandId: string }>();
@@ -143,15 +168,44 @@ export default function BrandRevealScreen() {
     );
   };
 
+  // Client-side only (see the generateStaticParams comment above for why
+  // this can't reach the raw static HTML) — still worth setting for the
+  // browser tab title and for crawlers that do execute JS.
+  const seoHead = brand && Platform.OS === 'web' && (() => {
+    const pageTitle = `${brand.name} referral code – Referral Robin`;
+    const pageDescription =
+      brand.currentOffer || `Get a ${brand.name} referral code, fairly rotated from real people on Referral Robin.`;
+    const pageUrl = `${SITE_URL}/brand/${id}`;
+    return (
+      <Head>
+        <title>{pageTitle}</title>
+        <meta name="description" content={pageDescription} />
+        <link rel="canonical" href={pageUrl} />
+        <meta property="og:type" content="website" />
+        <meta property="og:url" content={pageUrl} />
+        <meta property="og:title" content={pageTitle} />
+        <meta property="og:description" content={pageDescription} />
+        <meta property="og:image" content={brand.logoUrl || OG_IMAGE} />
+        <meta name="twitter:card" content="summary_large_image" />
+        <meta name="twitter:title" content={pageTitle} />
+        <meta name="twitter:description" content={pageDescription} />
+        <meta name="twitter:image" content={brand.logoUrl || OG_IMAGE} />
+      </Head>
+    );
+  })();
+
   if (isBrandLoading) {
     return (
-      <View style={[styles.container, { backgroundColor: colors.background, justifyContent: 'center', alignItems: 'center' }]}>
-        <ActivityIndicator size="large" color={colors.primary} />
-      </View>
+      <>
+        {seoHead}
+        <View style={[styles.container, { backgroundColor: colors.background, justifyContent: 'center', alignItems: 'center' }]}>
+          <ActivityIndicator size="large" color={colors.primary} />
+        </View>
+      </>
     );
   }
 
-  if (!brand) return null;
+  if (!brand) return seoHead || null;
 
   const formatTime = (seconds: number) => {
     const m = Math.floor(seconds / 60);
@@ -162,7 +216,9 @@ export default function BrandRevealScreen() {
   const isOnCooldown = timeLeft > 0;
 
   return (
-    <View style={[styles.container, { backgroundColor: colors.background }]}>
+    <>
+      {seoHead}
+      <View style={[styles.container, { backgroundColor: colors.background }]}>
       <View style={[styles.header, { paddingTop: insets.top + 16, backgroundColor: colors.card, borderBottomColor: colors.border }]}>
         <Pressable onPress={() => router.back()} style={styles.backButton}>
           <Feather name="chevron-left" size={28} color={colors.foreground} />
@@ -245,6 +301,7 @@ export default function BrandRevealScreen() {
         )}
       </View>
     </View>
+    </>
   );
 }
 

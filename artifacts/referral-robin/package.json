@@ -6,6 +6,7 @@
   "scripts": {
     "dev": "node ./scripts/dev.mjs",
     "build": "node scripts/build.js",
+    "export:web": "node scripts/generate-sitemap.mjs && expo export -p web && node scripts/inject-brand-seo.mjs",
     "serve": "node server/serve.js",
     "typecheck": "tsc -p tsconfig.json --noEmit",
     "android": "expo run:android",
