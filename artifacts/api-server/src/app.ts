@@ -1,6 +1,7 @@
 import express, { type Express } from "express";
 import cors from "cors";
 import pinoHttp from "pino-http";
+import * as Sentry from "@sentry/node";
 import { clerkMiddleware } from "@clerk/express";
 import { publishableKeyFromHost } from "@clerk/shared/keys";
 import {
@@ -65,5 +66,10 @@ app.use(
 );
 
 app.use("/api", router);
+
+// Must come after all routes/middleware, before any custom error handler —
+// forwards unhandled errors from route handlers to Sentry, then calls
+// next(err) so Express 5's default error handler still sends the response.
+Sentry.setupExpressErrorHandler(app);
 
 export default app;

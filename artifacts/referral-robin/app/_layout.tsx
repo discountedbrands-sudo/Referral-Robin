@@ -13,6 +13,7 @@ import { setBaseUrl, setAuthTokenGetter } from '@workspace/api-client-react';
 import { DeviceProvider } from '@/context/DeviceContext';
 import { SITE_URL, DEFAULT_TITLE, DEFAULT_DESCRIPTION, OG_IMAGE, API_BASE_URL } from '@/constants/seo';
 import { Analytics } from '@vercel/analytics/react';
+import * as Sentry from '@sentry/react-native';
 
 SplashScreen.preventAutoHideAsync();
 
@@ -26,6 +27,15 @@ const domain = process.env.EXPO_PUBLIC_DOMAIN;
 if (apiUrl) setBaseUrl(apiUrl);
 else if (domain) setBaseUrl(`https://${domain}`);
 else setBaseUrl(API_BASE_URL);
+
+// @sentry/react-native internally delegates to @sentry/react's browser
+// transport when Platform.OS === 'web', so one init call genuinely covers
+// web + native from this one codebase — no per-platform guard needed.
+// Safely no-ops if the DSN env var is unset (e.g. local dev).
+Sentry.init({
+  dsn: process.env.EXPO_PUBLIC_SENTRY_DSN,
+  environment: process.env.NODE_ENV ?? 'development',
+});
 
 // Guard: Clerk publishable keys always start with "pk_". If the env var is
 // missing or Codemagic left the placeholder unexpanded, skip ClerkProvider.
@@ -81,7 +91,7 @@ function AppShell() {
     <QueryClientProvider client={queryClient}>
       <SafeAreaProvider>
         <DeviceProvider>
-          <ErrorBoundary>
+          <ErrorBoundary onError={(error) => Sentry.captureException(error)}>
             <SiteHead />
             {Platform.OS === 'web' && <Analytics />}
             {Platform.OS === 'web' ? (
@@ -98,7 +108,7 @@ function AppShell() {
   );
 }
 
-export default function RootLayout() {
+function RootLayout() {
   useEffect(() => {
     SplashScreen.hideAsync();
   }, []);
@@ -114,3 +124,5 @@ export default function RootLayout() {
     </ClerkProvider>
   );
 }
+
+export default Sentry.wrap(RootLayout);
