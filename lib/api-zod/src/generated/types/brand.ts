@@ -9,6 +9,7 @@
 export interface Brand {
   id: number;
   name: string;
+  slug: string;
   /** @nullable */
   logoUrl?: string | null;
   /** @nullable */
@@ -19,4 +20,6 @@ export interface Brand {
   active: boolean;
   /** Number of active codes in the queue */
   codeCount?: number;
+  /** All-time sum of timesServed across every code the brand has ever had */
+  popularity?: number;
 }

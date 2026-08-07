@@ -12,32 +12,31 @@ import * as Clipboard from 'expo-clipboard';
 import * as Haptics from 'expo-haptics';
 import { API_BASE_URL, SITE_URL, OG_IMAGE } from '@/constants/seo';
 
-// Static export (web.output: "static") pre-renders one real HTML file per ID
-// returned here — but only the IDs, not any other data: Expo Router's
-// static renderer resets global/module state between pages and never awaits
-// this component's own async data fetch (useGetBrand below), so the actual
-// per-brand title/description/OG values can't reach the raw HTML from here.
-// scripts/inject-brand-seo.mjs rewrites those tags into each generated
-// dist/brand/{id}.html after `expo export` using the same brand list, which
-// is what actually fixes it for social link-preview bots (they don't run
-// JS, so this component's own <Head> below only ever helps browser tab
-// titles + JS-executing crawlers). IDs not covered here (brands added after
-// the last deploy) fall back to the generic `[brandId].html` shell; see
-// vercel.json's rewrite for that.
+// Static export (web.output: "static") pre-renders one real HTML file per
+// slug returned here — but only the slugs, not any other data: Expo
+// Router's static renderer resets global/module state between pages and
+// never awaits this component's own async data fetch (useGetBrand below),
+// so the actual per-brand title/description/OG values can't reach the raw
+// HTML from here. scripts/inject-brand-seo.mjs rewrites those tags into
+// each generated dist/brand/{slug}.html after `expo export` using the same
+// brand list, which is what actually fixes it for social link-preview bots
+// (they don't run JS, so this component's own <Head> below only ever helps
+// browser tab titles + JS-executing crawlers). Slugs not covered here
+// (brands added after the last deploy) fall back to the generic
+// `[slug].html` shell; see vercel.json's rewrite for that.
 export async function generateStaticParams() {
   try {
     const res = await fetch(`${API_BASE_URL}/api/brands`);
     if (!res.ok) return [];
-    const brands: { id: number; active: boolean }[] = await res.json();
-    return brands.filter((b) => b.active).map((b) => ({ brandId: String(b.id) }));
+    const brands: { slug: string; active: boolean }[] = await res.json();
+    return brands.filter((b) => b.active).map((b) => ({ slug: b.slug }));
   } catch {
     return [];
   }
 }
 
 export default function BrandRevealScreen() {
-  const { brandId } = useLocalSearchParams<{ brandId: string }>();
-  const id = Number(brandId);
+  const { slug } = useLocalSearchParams<{ slug: string }>();
   const colors = useColors();
   const insets = useSafeAreaInsets();
   const router = useRouter();
@@ -48,11 +47,13 @@ export default function BrandRevealScreen() {
   const [copied, setCopied] = useState(false);
 
   // Queries
-  const { data: brand, isLoading: isBrandLoading } = useGetBrand(id, { query: { queryKey: getGetBrandQueryKey(id), enabled: !!id } });
+  const { data: brand, isLoading: isBrandLoading } = useGetBrand(slug, { query: { queryKey: getGetBrandQueryKey(slug), enabled: !!slug } });
 
+  // brand.id (the internal numeric FK codes/cooldowns key off) is only
+  // known once `brand` has loaded — this query stays disabled until then.
   const { data: cooldownData, refetch: refetchCooldown } = useGetCooldown(
-    { brandId: id, deviceId: deviceId || '' },
-    { query: { queryKey: getGetCooldownQueryKey({ brandId: id, deviceId: deviceId || '' }), enabled: !!id && !!deviceId } }
+    { brandId: brand?.id ?? 0, deviceId: deviceId || '' },
+    { query: { queryKey: getGetCooldownQueryKey({ brandId: brand?.id ?? 0, deviceId: deviceId || '' }), enabled: !!brand?.id && !!deviceId } }
   );
 
   // Mutations
@@ -83,7 +84,7 @@ export default function BrandRevealScreen() {
   }, [cooldownData, refetchCooldown]);
 
   const handleGetCode = () => {
-    if (!deviceId) return;
+    if (!deviceId || !brand) return;
 
     // Browsing brands is public, but revealing a real code isn't — this mirrors
     // the requireAuth check the server enforces on POST /codes/next. This
@@ -97,7 +98,7 @@ export default function BrandRevealScreen() {
 
     Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
 
-    getNextCode.mutate({ data: { brandId: id, deviceId } }, {
+    getNextCode.mutate({ data: { brandId: brand.id, deviceId } }, {
       onSuccess: (data) => {
         setRevealedCode({ id: data.codeId, code: data.code });
         Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
@@ -175,7 +176,7 @@ export default function BrandRevealScreen() {
     const pageTitle = `${brand.name} referral code – Referral Robin`;
     const pageDescription =
       brand.currentOffer || `Get a ${brand.name} referral code, fairly rotated from real people on Referral Robin.`;
-    const pageUrl = `${SITE_URL}/brand/${id}`;
+    const pageUrl = `${SITE_URL}/brand/${slug}`;
     return (
       <Head>
         <title>{pageTitle}</title>

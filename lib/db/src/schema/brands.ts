@@ -5,6 +5,11 @@ import { z } from "zod/v4";
 export const brandsTable = pgTable("brands", {
   id: serial("id").primaryKey(),
   name: text("name").notNull(),
+  // Generated once from `name` at creation time (see POST /brands/submit
+  // and lib/db/src/slug.ts) and never changed afterward, even if the name
+  // is edited later — the brand page URL is built from this, and changing
+  // it after the fact would break any existing bookmarks/indexed links.
+  slug: text("slug").notNull().unique(),
   logoUrl: text("logo_url"),
   currentOffer: text("current_offer"),
   offerUpdatedAt: timestamp("offer_updated_at", { withTimezone: true }),

@@ -20,6 +20,7 @@ export default function ExploreScreen() {
 
   const [search, setSearch] = useState('');
   const [category, setCategory] = useState('All');
+  const [sort, setSort] = useState<'name' | 'popular'>('name');
   const [viewMode, setViewMode] = useState<'grid' | 'list'>('grid');
   const [imgErrors, setImgErrors] = useState<Record<string, boolean>>({});
 
@@ -29,10 +30,16 @@ export default function ExploreScreen() {
   // grid should pack more tiles per screen as there's more room, not just
   // stretch the same 2 columns wider.
   const numColumns = Platform.OS === 'web' ? Math.max(2, Math.min(4, Math.floor(width / 260))) : 2;
+  // Below this, wrapping category chips ate half the screen (multiple rows
+  // of chips before any brand was visible) — switch to a horizontal
+  // scroller instead. Wide/desktop keeps the wrapping row since there's
+  // room for every category to stay visible at once.
+  const isNarrow = width < 600;
 
   const { data, isLoading, isError } = useListBrands({
     search: search.trim() || undefined,
     category: category === 'All' ? undefined : category,
+    sort,
   });
   // Guard against a malformed/non-array response (e.g. an error page or
   // unexpected payload shape) so rendering falls back to an empty state
@@ -110,7 +117,7 @@ export default function ExploreScreen() {
   // its content with small fixed gaps is what makes it compact instead.
   const GridCard = ({ item }: { item: any }) => (
     <Pressable
-      onPress={() => router.push(`/(home)/brand/${item.id}`)}
+      onPress={() => router.push(`/(home)/brand/${item.slug}`)}
       style={({ pressed }) => ({
         flex: 1,
         borderRadius: 16,
@@ -167,6 +174,31 @@ export default function ExploreScreen() {
             )}
           </View>
 
+          {/* Sort toggle — name (default) vs most-popular (all-time
+              timesServed total, see api-server's /brands sort=popular). */}
+          <View style={{
+            flexDirection: 'row', height: 44, borderRadius: 12, borderWidth: 1,
+            borderColor: colors.border, overflow: 'hidden', backgroundColor: colors.input,
+          }}>
+            {(['name', 'popular'] as const).map((mode) => (
+              <Pressable
+                key={mode}
+                onPress={() => setSort(mode)}
+                accessibilityLabel={mode === 'name' ? 'Sort alphabetically' : 'Sort by popular'}
+                style={{
+                  width: 44, alignItems: 'center', justifyContent: 'center',
+                  backgroundColor: sort === mode ? colors.primary : 'transparent',
+                }}
+              >
+                <Feather
+                  name={mode === 'name' ? 'type' : 'trending-up'}
+                  size={16}
+                  color={sort === mode ? '#fff' : colors.mutedForeground}
+                />
+              </Pressable>
+            ))}
+          </View>
+
           {/* Grid / List toggle */}
           <View style={{
             flexDirection: 'row', height: 44, borderRadius: 12, borderWidth: 1,
@@ -191,29 +223,53 @@ export default function ExploreScreen() {
           </View>
         </View>
 
-        {/* Category chips — wraps to multiple rows instead of a horizontal
-            scroller, so all 10+ categories stay visible/discoverable at once
-            rather than hidden off-screen. */}
-        <View style={{ flexDirection: 'row', flexWrap: 'wrap', gap: 8 }}>
-          {CATEGORIES.map((item) => {
-            const sel = category === item;
-            return (
-              <Pressable
-                key={item}
-                onPress={() => setCategory(item)}
-                style={{
-                  paddingHorizontal: 14, paddingVertical: 6, borderRadius: 20, borderWidth: 1,
-                  backgroundColor: sel ? colors.primary : colors.muted,
-                  borderColor: sel ? colors.primary : 'transparent',
-                }}
-              >
-                <Text style={{ fontSize: 13, color: sel ? '#fff' : colors.mutedForeground }}>
-                  {item}
-                </Text>
-              </Pressable>
-            );
-          })}
-        </View>
+        {/* Category chips — wrap to multiple rows on wide/desktop screens so
+            all 10+ categories stay visible/discoverable at once, but that
+            wrapping ate half the screen on narrow widths, so scroll
+            horizontally there instead of wrapping. */}
+        {isNarrow ? (
+          <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={{ gap: 8 }}>
+            {CATEGORIES.map((item) => {
+              const sel = category === item;
+              return (
+                <Pressable
+                  key={item}
+                  onPress={() => setCategory(item)}
+                  style={{
+                    paddingHorizontal: 14, paddingVertical: 6, borderRadius: 20, borderWidth: 1,
+                    backgroundColor: sel ? colors.primary : colors.muted,
+                    borderColor: sel ? colors.primary : 'transparent',
+                  }}
+                >
+                  <Text style={{ fontSize: 13, color: sel ? '#fff' : colors.mutedForeground }}>
+                    {item}
+                  </Text>
+                </Pressable>
+              );
+            })}
+          </ScrollView>
+        ) : (
+          <View style={{ flexDirection: 'row', flexWrap: 'wrap', gap: 8 }}>
+            {CATEGORIES.map((item) => {
+              const sel = category === item;
+              return (
+                <Pressable
+                  key={item}
+                  onPress={() => setCategory(item)}
+                  style={{
+                    paddingHorizontal: 14, paddingVertical: 6, borderRadius: 20, borderWidth: 1,
+                    backgroundColor: sel ? colors.primary : colors.muted,
+                    borderColor: sel ? colors.primary : 'transparent',
+                  }}
+                >
+                  <Text style={{ fontSize: 13, color: sel ? '#fff' : colors.mutedForeground }}>
+                    {item}
+                  </Text>
+                </Pressable>
+              );
+            })}
+          </View>
+        )}
       </View>
 
       {/* Content */}
@@ -277,7 +333,7 @@ export default function ExploreScreen() {
 
         {/* ── LIST VIEW ── */}
         {viewMode === 'list' && brands.map((item: any) => (
-          <Link key={item.id} href={`/(home)/brand/${item.id}`} asChild>
+          <Link key={item.id} href={`/(home)/brand/${item.slug}`} asChild>
             <Pressable style={({ pressed }) => ({
               flexDirection: 'row', alignItems: 'center', gap: 14,
               borderRadius: 14, backgroundColor: colors.card,

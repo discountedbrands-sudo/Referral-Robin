@@ -1,8 +1,8 @@
 // Rewrites the generic site-wide title/description/OG/Twitter tags that
-// `expo export` bakes into each dist/brand/{id}.html with real per-brand
+// `expo export` bakes into each dist/brand/{slug}.html with real per-brand
 // values. Necessary because Expo Router's static renderer never awaits this
 // page's own data fetch (see the comment above generateStaticParams in
-// app/(home)/brand/[brandId].tsx) — there's no supported way to get build-
+// app/(home)/brand/[slug].tsx) — there's no supported way to get build-
 // time-fetched data into that render pass, so this rewrites the already-
 // exported HTML directly instead. Run after `expo export -p web` (see
 // vercel.json's buildCommand). A transient API failure here must not fail
@@ -44,14 +44,14 @@ async function main() {
 
   let updated = 0;
   for (const brand of brands.filter((b) => b.active)) {
-    const filePath = path.join(distDir, 'brand', `${brand.id}.html`);
+    const filePath = path.join(distDir, 'brand', `${brand.slug}.html`);
     if (!fs.existsSync(filePath)) continue;
 
     const title = escapeHtml(`${brand.name} referral code – Referral Robin`);
     const description = escapeHtml(
       brand.currentOffer || `Get a ${brand.name} referral code, fairly rotated from real people on Referral Robin.`
     );
-    const url = `${SITE_URL}/brand/${brand.id}`;
+    const url = `${SITE_URL}/brand/${brand.slug}`;
     const image = brand.logoUrl || OG_IMAGE;
 
     let html = fs.readFileSync(filePath, 'utf-8');

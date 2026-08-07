@@ -1,5 +1,5 @@
 import { db } from "@workspace/db";
-import { brandsTable } from "@workspace/db";
+import { brandsTable, slugify } from "@workspace/db";
 import { logger } from "./logger";
 
 // Clearbit's free logo API (logo.clearbit.com) was discontinued after the
@@ -30,6 +30,9 @@ export async function seedBrandsIfEmpty(): Promise<void> {
   if (existing.length > 0) return;
 
   logger.info("Seeding initial brands...");
-  await db.insert(brandsTable).values(SEED_BRANDS);
+  // Only ever runs against an empty table (see the guard above), so no
+  // collision-checking against existing rows is needed here — every name
+  // in SEED_BRANDS above is already distinct.
+  await db.insert(brandsTable).values(SEED_BRANDS.map((b) => ({ ...b, slug: slugify(b.name) })));
   logger.info({ count: SEED_BRANDS.length }, "Brands seeded");
 }

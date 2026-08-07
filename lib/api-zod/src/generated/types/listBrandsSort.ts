@@ -5,10 +5,11 @@
  * Referral Robin API — fair-rotation referral code marketplace
  * OpenAPI spec version: 0.1.0
  */
-import type { ListBrandsSort } from './listBrandsSort';
 
-export type ListBrandsParams = {
-category?: string;
-search?: string;
-sort?: ListBrandsSort;
-};
+export type ListBrandsSort = typeof ListBrandsSort[keyof typeof ListBrandsSort];
+
+
+export const ListBrandsSort = {
+  name: 'name',
+  popular: 'popular',
+} as const;

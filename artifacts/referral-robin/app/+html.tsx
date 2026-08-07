@@ -5,7 +5,7 @@ import type { PropsWithChildren } from 'react';
 // `web.output: "static"` in app.json — under the default "single" output
 // this file is never used at all). Title/description/OG/Twitter tags live in
 // app/_layout.tsx via the `Head` component instead of here, so that
-// per-page `<Head>` overrides (see LegalPage, brand/[brandId]) replace them
+// per-page `<Head>` overrides (see LegalPage, brand/[slug]) replace them
 // cleanly instead of producing duplicate <title>/<meta> tags.
 export default function Root({ children }: PropsWithChildren) {
   return (

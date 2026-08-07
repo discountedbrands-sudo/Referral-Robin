@@ -16,12 +16,12 @@ const outPath = path.join(projectRoot, 'public', 'sitemap.xml');
 
 const staticPaths = ['/', '/privacy', '/terms'];
 
-async function fetchActiveBrandIds() {
+async function fetchActiveBrandSlugs() {
   try {
     const res = await fetch(`${API_URL}/api/brands`);
     if (!res.ok) throw new Error(`HTTP ${res.status}`);
     const brands = await res.json();
-    return brands.filter((b) => b.active).map((b) => b.id);
+    return brands.filter((b) => b.active).map((b) => b.slug);
   } catch (err) {
     console.warn(`Failed to fetch brand list from ${API_URL}/api/brands (${err.message}) — writing static pages only.`);
     return [];
@@ -36,8 +36,8 @@ function buildXml(urls) {
   return `<?xml version="1.0" encoding="UTF-8"?>\n<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">\n${entries}\n</urlset>\n`;
 }
 
-const brandIds = await fetchActiveBrandIds();
-const urls = [...staticPaths, ...brandIds.map((id) => `/brand/${id}`)];
+const brandSlugs = await fetchActiveBrandSlugs();
+const urls = [...staticPaths, ...brandSlugs.map((slug) => `/brand/${slug}`)];
 
 fs.writeFileSync(outPath, buildXml(urls));
 console.log(`Wrote ${urls.length} URLs to ${outPath}`);

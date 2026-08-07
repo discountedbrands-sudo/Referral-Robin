@@ -50,6 +50,12 @@ paths:
           required: false
           schema:
             type: string
+        - name: sort
+          in: query
+          required: false
+          schema:
+            type: string
+            enum: [name, popular]
       responses:
         "200":
           description: List of active brands
@@ -60,17 +66,17 @@ paths:
                 items:
                   $ref: "#/components/schemas/Brand"
 
-  /brands/{brandId}:
+  /brands/{slug}:
     get:
       operationId: getBrand
       tags: [brands]
-      summary: Get brand by ID
+      summary: Get brand by slug
       parameters:
-        - name: brandId
+        - name: slug
           in: path
           required: true
           schema:
-            type: number
+            type: string
       responses:
         "200":
           description: Brand details
@@ -277,11 +283,13 @@ components:
 
     Brand:
       type: object
-      required: [id, name, category, active]
+      required: [id, name, slug, category, active]
       properties:
         id:
           type: number
         name:
+          type: string
+        slug:
           type: string
         logoUrl:
           type: ["string", "null"]
@@ -296,6 +304,9 @@ components:
         codeCount:
           type: number
           description: Number of active codes in the queue
+        popularity:
+          type: number
+          description: All-time sum of timesServed across every code the brand has ever had
 
     CodeReveal:
       type: object

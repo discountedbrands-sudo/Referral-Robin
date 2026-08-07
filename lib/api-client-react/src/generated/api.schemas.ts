@@ -12,6 +12,7 @@ export interface HealthStatus {
 export interface Brand {
   id: number;
   name: string;
+  slug: string;
   /** @nullable */
   logoUrl?: string | null;
   /** @nullable */
@@ -22,6 +23,8 @@ export interface Brand {
   active: boolean;
   /** Number of active codes in the queue */
   codeCount?: number;
+  /** All-time sum of timesServed across every code the brand has ever had */
+  popularity?: number;
 }
 
 export interface CodeReveal {
@@ -63,8 +66,6 @@ export interface UpdateCodeInput {
      * @nullable
      */
   expiresAt?: string | null;
-  /** Hand-added, not orval-generated — owner retire/reactivate (backlog idea #10) */
-  status?: 'active' | 'paused';
 }
 
 export interface ReportInput {
@@ -120,7 +121,16 @@ export interface SuccessResult {
 export type ListBrandsParams = {
 category?: string;
 search?: string;
+sort?: ListBrandsSort;
 };
+
+export type ListBrandsSort = typeof ListBrandsSort[keyof typeof ListBrandsSort];
+
+
+export const ListBrandsSort = {
+  name: 'name',
+  popular: 'popular',
+} as const;
 
 export type GetCooldownParams = {
 brandId: number;

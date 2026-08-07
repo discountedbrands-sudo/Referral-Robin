@@ -3,6 +3,6 @@
   "outputDirectory": "dist",
   "cleanUrls": true,
   "rewrites": [
-    { "source": "/brand/:brandId", "destination": "/brand/[brandId].html" }
+    { "source": "/brand/:slug", "destination": "/brand/[slug].html" }
   ]
 }

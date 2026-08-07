@@ -22,38 +22,43 @@ export const HealthCheckResponse = zod.object({
  */
 export const ListBrandsQueryParams = zod.object({
   "category": zod.coerce.string().optional(),
-  "search": zod.coerce.string().optional()
+  "search": zod.coerce.string().optional(),
+  "sort": zod.enum(['name', 'popular']).optional()
 })
 
 export const ListBrandsResponseItem = zod.object({
   "id": zod.number(),
   "name": zod.string(),
+  "slug": zod.string(),
   "logoUrl": zod.string().nullish(),
   "currentOffer": zod.string().nullish(),
   "offerUpdatedAt": zod.string().nullish(),
   "category": zod.string(),
   "active": zod.boolean(),
-  "codeCount": zod.number().optional().describe('Number of active codes in the queue')
+  "codeCount": zod.number().optional().describe('Number of active codes in the queue'),
+  "popularity": zod.number().optional().describe('All-time sum of timesServed across every code the brand has ever had')
 })
 export const ListBrandsResponse = zod.array(ListBrandsResponseItem)
 
 
 /**
- * @summary Get brand by ID
+ * @summary Get brand by slug
  */
 export const GetBrandParams = zod.object({
-  "brandId": zod.coerce.number()
+  "slug": zod.coerce.string()
 })
 
 export const GetBrandResponse = zod.object({
   "id": zod.number(),
   "name": zod.string(),
+  "slug": zod.string(),
   "logoUrl": zod.string().nullish(),
   "currentOffer": zod.string().nullish(),
   "offerUpdatedAt": zod.string().nullish(),
   "category": zod.string(),
   "active": zod.boolean(),
-  "codeCount": zod.number().optional().describe('Number of active codes in the queue')
+  "codeCount": zod.number().optional().describe('Number of active codes in the queue'),
+  "popularity": zod.number().optional().describe('All-time sum of timesServed across every code the brand has ever had')
 })
 
 
@@ -126,12 +131,7 @@ export const UpdateCodeParams = zod.object({
 
 export const UpdateCodeBody = zod.object({
   "code": zod.string().min(1).optional(),
-  "expiresAt": zod.coerce.date().nullish().describe('Optional expiry date for this code (ISO 8601)'),
-  // Hand-added, not orval-generated (see @workspace/api-zod's admin.ts for
-  // why this repo's "generated" files get edited directly) — lets the owner
-  // retire/reactivate their own code (backlog idea #10). Deliberately
-  // excludes 'removed', which stays reserved for the report-moderation flow.
-  "status": zod.enum(['active', 'paused']).optional()
+  "expiresAt": zod.coerce.date().nullish().describe('Optional expiry date for this code (ISO 8601)')
 })
 
 export const UpdateCodeResponse = zod.object({

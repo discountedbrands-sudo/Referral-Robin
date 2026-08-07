@@ -59,7 +59,7 @@ function ApiAuthSync() {
 
 // Site-wide default title/description/OG/Twitter tags. Rendered for every
 // route (this lives in the root layout), so page-level `<Head>` overrides
-// (LegalPage, brand/[brandId]) replace individual tags via React Helmet's
+// (LegalPage, brand/[slug]) replace individual tags via React Helmet's
 // merge rules instead of stacking duplicate <title>/<meta> tags alongside
 // these. Only takes effect in the raw HTML when `web.output: "static"` is
 // set — see app/+html.tsx.

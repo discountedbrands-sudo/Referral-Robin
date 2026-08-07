@@ -226,20 +226,20 @@ export function useListBrands<TData = Awaited<ReturnType<typeof listBrands>>, TE
 
 
 
-export const getGetBrandUrl = (brandId: number,) => {
+export const getGetBrandUrl = (slug: string,) => {
 
 
 
 
-  return `/api/brands/${brandId}`
+  return `/api/brands/${slug}`
 }
 
 /**
- * @summary Get brand by ID
+ * @summary Get brand by slug
  */
-export const getBrand = async (brandId: number, options?: Parameters<typeof customFetch>[1]): Promise<Brand> => {
+export const getBrand = async (slug: string, options?: Parameters<typeof customFetch>[1]): Promise<Brand> => {
 
-  return customFetch<Brand>(getGetBrandUrl(brandId),
+  return customFetch<Brand>(getGetBrandUrl(slug),
   {
     ...options,
     method: 'GET'
@@ -252,29 +252,29 @@ export const getBrand = async (brandId: number, options?: Parameters<typeof cust
 
 
 
-export const getGetBrandQueryKey = (brandId: number,) => {
+export const getGetBrandQueryKey = (slug: string,) => {
     return [
-    `/api/brands/${brandId}`
+    `/api/brands/${slug}`
     ] as const;
     }
 
 
-export const getGetBrandQueryOptions = <TData = Awaited<ReturnType<typeof getBrand>>, TError = ErrorType<void>>(brandId: number, options?: { query?:UseQueryOptions<Awaited<ReturnType<typeof getBrand>>, TError, TData>, request?: SecondParameter<typeof customFetch>}
+export const getGetBrandQueryOptions = <TData = Awaited<ReturnType<typeof getBrand>>, TError = ErrorType<void>>(slug: string, options?: { query?:UseQueryOptions<Awaited<ReturnType<typeof getBrand>>, TError, TData>, request?: SecondParameter<typeof customFetch>}
 ) => {
 
 const {query: queryOptions, request: requestOptions} = options ?? {};
 
-  const queryKey =  queryOptions?.queryKey ?? getGetBrandQueryKey(brandId);
+  const queryKey =  queryOptions?.queryKey ?? getGetBrandQueryKey(slug);
 
 
 
-    const queryFn: QueryFunction<Awaited<ReturnType<typeof getBrand>>> = ({ signal }) => getBrand(brandId, { signal, ...requestOptions });
+    const queryFn: QueryFunction<Awaited<ReturnType<typeof getBrand>>> = ({ signal }) => getBrand(slug, { signal, ...requestOptions });
 
 
 
 
 
-   return  { queryKey, queryFn, enabled: brandId !== null && brandId !== undefined, ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof getBrand>>, TError, TData> & { queryKey: QueryKey }
+   return  { queryKey, queryFn, enabled: slug !== null && slug !== undefined, ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof getBrand>>, TError, TData> & { queryKey: QueryKey }
 }
 
 export type GetBrandQueryResult = NonNullable<Awaited<ReturnType<typeof getBrand>>>
@@ -282,15 +282,15 @@ export type GetBrandQueryError = ErrorType<void>
 
 
 /**
- * @summary Get brand by ID
+ * @summary Get brand by slug
  */
 
 export function useGetBrand<TData = Awaited<ReturnType<typeof getBrand>>, TError = ErrorType<void>>(
- brandId: number, options?: { query?:UseQueryOptions<Awaited<ReturnType<typeof getBrand>>, TError, TData>, request?: SecondParameter<typeof customFetch>}
+ slug: string, options?: { query?:UseQueryOptions<Awaited<ReturnType<typeof getBrand>>, TError, TData>, request?: SecondParameter<typeof customFetch>}
 
  ):  UseQueryResult<TData, TError> & { queryKey: QueryKey } {
 
-  const queryOptions = getGetBrandQueryOptions(brandId,options)
+  const queryOptions = getGetBrandQueryOptions(slug,options)
 
   const query = useQuery(queryOptions) as  UseQueryResult<TData, TError> & { queryKey: QueryKey };
 

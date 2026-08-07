@@ -319,14 +319,16 @@ export function LandingScreen() {
               </View>
               <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={{ gap: 12 }}>
                 {trendingBrands.map((brand: any) => (
-                  <View
+                  <Pressable
                     key={brand.id}
-                    style={{
+                    onPress={() => router.push(`/(home)/brand/${brand.slug}`)}
+                    style={({ pressed }) => ({
                       width: isWide ? 200 : 160,
                       backgroundColor: colors.muted, borderRadius: 16,
                       borderWidth: 1, borderColor: 'rgba(255,255,255,0.10)',
                       padding: 14, gap: 8,
-                    }}
+                      opacity: pressed ? 0.82 : 1,
+                    })}
                   >
                     <View style={{
                       width: 44, height: 44, borderRadius: 10, backgroundColor: '#FFFFFF',
@@ -344,7 +346,7 @@ export function LandingScreen() {
                     <Text style={{ color: colors.accent, fontSize: 12 }} numberOfLines={2}>
                       {brand.currentOffer || ' '}
                     </Text>
-                  </View>
+                  </Pressable>
                 ))}
               </ScrollView>
             </View>
@@ -398,15 +400,17 @@ export function LandingScreen() {
             ) : (
               <View style={{ flexDirection: 'row', flexWrap: 'wrap', gap: gridGap }}>
                 {brands.slice(0, isWeb ? gridColumns * 2 : 9).map((brand: any) => (
-                  <View
+                  <Pressable
                     key={brand.id}
-                    style={{
+                    onPress={() => router.push(`/(home)/brand/${brand.slug}`)}
+                    style={({ pressed }) => ({
                       width: cardWidthPct,
                       backgroundColor: colors.muted,
                       borderRadius: 14,
                       borderWidth: 1, borderColor: 'rgba(255,255,255,0.10)',
                       padding: isWide ? 16 : 10, alignItems: 'center', gap: 8,
-                    }}
+                      opacity: pressed ? 0.82 : 1,
+                    })}
                   >
                     <View
                       style={{
@@ -426,7 +430,7 @@ export function LandingScreen() {
                     >
                       {brand.name}
                     </Text>
-                  </View>
+                  </Pressable>
                 ))}
               </View>
             )}

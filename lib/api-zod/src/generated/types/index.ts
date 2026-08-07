@@ -15,6 +15,7 @@ export * from './cooldownStatus';
 export * from './getCooldownParams';
 export * from './healthStatus';
 export * from './listBrandsParams';
+export * from './listBrandsSort';
 export * from './nextCodeInput';
 export * from './reportInput';
 export * from './successResult';
