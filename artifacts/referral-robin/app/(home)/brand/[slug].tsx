@@ -11,6 +11,7 @@ import { useDevice } from '@/context/DeviceContext';
 import * as Clipboard from 'expo-clipboard';
 import * as Haptics from 'expo-haptics';
 import { API_BASE_URL, SITE_URL, OG_IMAGE } from '@/constants/seo';
+import { SignInPrompt } from '@/components/SignInPrompt';
 
 // Static export (web.output: "static") pre-renders one real HTML file per
 // slug returned here — but only the slugs, not any other data: Expo
@@ -45,6 +46,7 @@ export default function BrandRevealScreen() {
 
   const [revealedCode, setRevealedCode] = useState<{ id: number; code: string } | null>(null);
   const [copied, setCopied] = useState(false);
+  const [showSignInPrompt, setShowSignInPrompt] = useState(false);
 
   // Queries
   const { data: brand, isLoading: isBrandLoading } = useGetBrand(slug, { query: { queryKey: getGetBrandQueryKey(slug), enabled: !!slug } });
@@ -83,18 +85,13 @@ export default function BrandRevealScreen() {
     }
   }, [cooldownData, refetchCooldown]);
 
-  const handleGetCode = () => {
+  // The actual reveal call, split out from the isSignedIn gate below so the
+  // sign-in prompt's onSignedIn can call it directly right after a session
+  // becomes active — isSignedIn from useAuth() won't reflect that yet in
+  // the same callback (updates on the next render), so re-running
+  // handleGetCode immediately after sign-in would just re-open the prompt.
+  const revealCode = () => {
     if (!deviceId || !brand) return;
-
-    // Browsing brands is public, but revealing a real code isn't — this mirrors
-    // the requireAuth check the server enforces on POST /codes/next. This
-    // client-side check is just UX (skip the round trip, send a clear prompt);
-    // the actual security boundary is the server rejecting an unauthenticated
-    // request with 401, handled below as a fallback in case this state is stale.
-    if (!isSignedIn) {
-      router.push('/(auth)/sign-in');
-      return;
-    }
 
     Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
 
@@ -107,7 +104,7 @@ export default function BrandRevealScreen() {
       onError: (err: any) => {
         // Alert.alert() is a no-op on react-native-web; fall back to window.alert.
         if (err?.status === 401) {
-          router.push('/(auth)/sign-in');
+          setShowSignInPrompt(true);
         } else if (err?.data?.error === 'CooldownError') {
           if (Platform.OS === 'web') window.alert('You are on cooldown for this brand.');
           else Alert.alert("Hold on", "You are on cooldown for this brand.");
@@ -119,6 +116,22 @@ export default function BrandRevealScreen() {
         }
       }
     });
+  };
+
+  const handleGetCode = () => {
+    if (!deviceId || !brand) return;
+
+    // Browsing brands is public, but revealing a real code isn't — this mirrors
+    // the requireAuth check the server enforces on POST /codes/next. This
+    // client-side check is just UX (skip the round trip, send a clear prompt);
+    // the actual security boundary is the server rejecting an unauthenticated
+    // request with 401, handled above as a fallback in case this state is stale.
+    if (!isSignedIn) {
+      setShowSignInPrompt(true);
+      return;
+    }
+
+    revealCode();
   };
 
   const handleCopy = async () => {
@@ -324,6 +337,14 @@ export default function BrandRevealScreen() {
         )}
       </View>
     </View>
+    <SignInPrompt
+      visible={showSignInPrompt}
+      onClose={() => setShowSignInPrompt(false)}
+      onSignedIn={() => {
+        setShowSignInPrompt(false);
+        revealCode();
+      }}
+    />
     </>
   );
 }
