@@ -5,6 +5,7 @@ import { db, brandsTable, codesTable, uniqueSlug } from "@workspace/db";
 import { ListBrandsQueryParams, GetBrandParams, CreateBrandBody } from "@workspace/api-zod";
 import { getTrendingBrands } from "../lib/trending";
 import { requireAuth, isAdminUser } from "../lib/auth";
+import { firstIssueMessage } from "../lib/zodError";
 
 const router: IRouter = Router();
 
@@ -17,7 +18,7 @@ const logoUrl = (domain: string) =>
 router.get("/brands", async (req, res): Promise<void> => {
   const parsed = ListBrandsQueryParams.safeParse(req.query);
   if (!parsed.success) {
-    res.status(400).json({ error: parsed.error.message });
+    res.status(400).json({ error: firstIssueMessage(parsed.error) });
     return;
   }
 
@@ -69,7 +70,7 @@ router.get("/brands", async (req, res): Promise<void> => {
 router.post("/brands/submit", requireAuth, async (req: Request & { userId?: string }, res): Promise<void> => {
   const parsed = CreateBrandBody.safeParse(req.body);
   if (!parsed.success) {
-    res.status(400).json({ error: parsed.error.message });
+    res.status(400).json({ error: firstIssueMessage(parsed.error) });
     return;
   }
 
@@ -130,7 +131,7 @@ router.get("/brands/trending", async (_req, res): Promise<void> => {
 router.get("/brands/:slug", async (req, res): Promise<void> => {
   const parsed = GetBrandParams.safeParse(req.params);
   if (!parsed.success) {
-    res.status(400).json({ error: parsed.error.message });
+    res.status(400).json({ error: firstIssueMessage(parsed.error) });
     return;
   }
 

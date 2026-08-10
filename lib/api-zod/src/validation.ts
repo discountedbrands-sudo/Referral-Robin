@@ -10,7 +10,12 @@ const BARE_DOMAIN_RE =
   /^(?!-)[a-z0-9-]{1,63}(?<!-)(\.(?!-)[a-z0-9-]{1,63}(?<!-))*\.[a-z]{2,24}$/;
 
 export function isBareDomain(value: string): boolean {
-  return BARE_DOMAIN_RE.test(value.trim().toLowerCase());
+  const normalized = value.trim().toLowerCase();
+  // "www." is syntactically a valid subdomain label, so the regex alone
+  // wouldn't catch it — reject it explicitly so brands.co.uk and
+  // www.brands.co.uk aren't silently treated as different domains.
+  if (normalized.startsWith("www.")) return false;
+  return BARE_DOMAIN_RE.test(normalized);
 }
 
 // Plain text only — no HTML tags, no links. Length cap is a spam/abuse

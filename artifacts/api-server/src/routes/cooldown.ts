@@ -2,6 +2,7 @@ import { Router, type IRouter } from "express";
 import { eq, and } from "drizzle-orm";
 import { db, deviceCooldownsTable } from "@workspace/db";
 import { GetCooldownQueryParams } from "@workspace/api-zod";
+import { firstIssueMessage } from "../lib/zodError";
 
 const router: IRouter = Router();
 
@@ -9,7 +10,7 @@ const router: IRouter = Router();
 router.get("/cooldown", async (req, res): Promise<void> => {
   const parsed = GetCooldownQueryParams.safeParse(req.query);
   if (!parsed.success) {
-    res.status(400).json({ error: parsed.error.message });
+    res.status(400).json({ error: firstIssueMessage(parsed.error) });
     return;
   }
 

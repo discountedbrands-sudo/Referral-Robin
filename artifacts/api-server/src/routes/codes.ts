@@ -12,6 +12,7 @@ import {
 } from "@workspace/api-zod";
 import { requireAuth } from "../lib/auth";
 import { rebuildQueue } from "../lib/queue";
+import { firstIssueMessage } from "../lib/zodError";
 import type { Request } from "express";
 
 const router: IRouter = Router();
@@ -24,7 +25,7 @@ const COOLDOWN_MS = 10 * 60 * 1000; // 10 minutes
 router.post("/codes/next", requireAuth, async (req, res): Promise<void> => {
   const parsed = GetNextCodeBody.safeParse(req.body);
   if (!parsed.success) {
-    res.status(400).json({ error: parsed.error.message });
+    res.status(400).json({ error: firstIssueMessage(parsed.error) });
     return;
   }
 
@@ -177,7 +178,7 @@ router.post("/codes/next", requireAuth, async (req, res): Promise<void> => {
 router.post("/codes/confirm-copy", async (req, res): Promise<void> => {
   const parsed = ConfirmCopyBody.safeParse(req.body);
   if (!parsed.success) {
-    res.status(400).json({ error: parsed.error.message });
+    res.status(400).json({ error: firstIssueMessage(parsed.error) });
     return;
   }
 
@@ -208,7 +209,7 @@ router.post(
   async (req: Request & { userId?: string }, res): Promise<void> => {
     const parsed = SubmitCodeBody.safeParse(req.body);
     if (!parsed.success) {
-      res.status(400).json({ error: parsed.error.message });
+      res.status(400).json({ error: firstIssueMessage(parsed.error) });
       return;
     }
 
@@ -262,13 +263,13 @@ router.patch(
   async (req: Request & { userId?: string }, res): Promise<void> => {
     const params = UpdateCodeParams.safeParse(req.params);
     if (!params.success) {
-      res.status(400).json({ error: params.error.message });
+      res.status(400).json({ error: firstIssueMessage(params.error) });
       return;
     }
 
     const body = UpdateCodeBody.safeParse(req.body);
     if (!body.success) {
-      res.status(400).json({ error: body.error.message });
+      res.status(400).json({ error: firstIssueMessage(body.error) });
       return;
     }
 
@@ -335,13 +336,13 @@ router.patch(
 router.post("/codes/:codeId/report", requireAuth, async (req, res): Promise<void> => {
   const params = ReportCodeParams.safeParse(req.params);
   if (!params.success) {
-    res.status(400).json({ error: params.error.message });
+    res.status(400).json({ error: firstIssueMessage(params.error) });
     return;
   }
 
   const body = ReportCodeBody.safeParse(req.body);
   if (!body.success) {
-    res.status(400).json({ error: body.error.message });
+    res.status(400).json({ error: firstIssueMessage(body.error) });
     return;
   }
 

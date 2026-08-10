@@ -7,7 +7,7 @@ import { isBareDomain, isPlainOfferText } from "./validation";
 // new endpoints out of generated/ rather than hand-editing files whose
 // header claims "Do not edit manually".
 
-const DOMAIN_MESSAGE = 'Domain must be a bare domain like "monzo.com" — no https://, paths, or query strings';
+const DOMAIN_MESSAGE = "Enter just the domain, like monzo.com — not the full URL. Remove https://, www., and anything after the domain.";
 const OFFER_MESSAGE = "Offer must be plain text (no links or HTML), 280 characters or fewer";
 
 /**

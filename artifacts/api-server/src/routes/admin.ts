@@ -3,6 +3,7 @@ import { eq } from "drizzle-orm";
 import { db, brandsTable } from "@workspace/db";
 import { AdminBrandParams, UpdateBrandBody } from "@workspace/api-zod";
 import { requireAdmin } from "../lib/auth";
+import { firstIssueMessage } from "../lib/zodError";
 
 const router: IRouter = Router();
 
@@ -44,13 +45,13 @@ router.get("/admin/brands", requireAdmin, async (_req, res): Promise<void> => {
 router.patch("/admin/brands/:brandId", requireAdmin, async (req, res): Promise<void> => {
   const params = AdminBrandParams.safeParse(req.params);
   if (!params.success) {
-    res.status(400).json({ error: params.error.message });
+    res.status(400).json({ error: firstIssueMessage(params.error) });
     return;
   }
 
   const body = UpdateBrandBody.safeParse(req.body);
   if (!body.success) {
-    res.status(400).json({ error: body.error.message });
+    res.status(400).json({ error: firstIssueMessage(body.error) });
     return;
   }
 
@@ -98,7 +99,7 @@ router.patch("/admin/brands/:brandId", requireAdmin, async (req, res): Promise<v
 router.post("/admin/brands/:brandId/approve", requireAdmin, async (req, res): Promise<void> => {
   const params = AdminBrandParams.safeParse(req.params);
   if (!params.success) {
-    res.status(400).json({ error: params.error.message });
+    res.status(400).json({ error: firstIssueMessage(params.error) });
     return;
   }
 
@@ -132,7 +133,7 @@ router.post("/admin/brands/:brandId/approve", requireAdmin, async (req, res): Pr
 router.post("/admin/brands/:brandId/reject", requireAdmin, async (req, res): Promise<void> => {
   const params = AdminBrandParams.safeParse(req.params);
   if (!params.success) {
-    res.status(400).json({ error: params.error.message });
+    res.status(400).json({ error: firstIssueMessage(params.error) });
     return;
   }
 
@@ -168,7 +169,7 @@ router.post("/admin/brands/:brandId/reject", requireAdmin, async (req, res): Pro
 router.delete("/admin/brands/:brandId", requireAdmin, async (req, res): Promise<void> => {
   const params = AdminBrandParams.safeParse(req.params);
   if (!params.success) {
-    res.status(400).json({ error: params.error.message });
+    res.status(400).json({ error: firstIssueMessage(params.error) });
     return;
   }
 
