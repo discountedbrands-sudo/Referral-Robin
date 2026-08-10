@@ -366,6 +366,30 @@ export default function ExploreScreen() {
         ))}
       </ScrollView>
 
+      {/* Add a brand — smaller "mini FAB" stacked above the code-submit FAB
+          so it's persistently reachable without competing with the more
+          common action. Routes to admin/submit-brand, which despite the URL
+          is open to any signed-in user (server decides admin vs. auto-approve
+          outcome) — same screen the empty-search-results "Add {name}" button
+          already used. */}
+      <Link href="/(home)/admin/submit-brand" asChild>
+        <Pressable
+          accessibilityLabel="Add a brand"
+          style={{
+            position: 'absolute', right: 25,
+            bottom: insets.bottom + (Platform.OS === 'ios' ? 80 : 90) + 66,
+            width: 44, height: 44, borderRadius: 22,
+            alignItems: 'center', justifyContent: 'center',
+            backgroundColor: colors.card,
+            borderWidth: 1, borderColor: colors.border,
+            shadowColor: '#000', shadowOffset: { width: 0, height: 3 },
+            shadowOpacity: 0.25, shadowRadius: 5, elevation: 5,
+          }}
+        >
+          <Feather name="tag" size={18} color={colors.foreground} />
+        </Pressable>
+      </Link>
+
       {/* FAB */}
       <Link href="/(home)/submit" asChild>
         <Pressable style={{
