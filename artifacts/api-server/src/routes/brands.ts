@@ -21,10 +21,11 @@ router.get("/brands", async (req, res): Promise<void> => {
     return;
   }
 
-  const { category, search, sort } = parsed.data;
+  const { category, country, search, sort } = parsed.data;
 
   const conditions = [eq(brandsTable.active, true)];
   if (category) conditions.push(eq(brandsTable.category, category));
+  if (country) conditions.push(eq(brandsTable.country, country));
   if (search) conditions.push(ilike(brandsTable.name, `%${search}%`));
 
   // Popularity = all-time codesTable.timesServed summed across every code a
@@ -43,6 +44,7 @@ router.get("/brands", async (req, res): Promise<void> => {
       currentOffer: brandsTable.currentOffer,
       offerUpdatedAt: brandsTable.offerUpdatedAt,
       category: brandsTable.category,
+      country: brandsTable.country,
       active: brandsTable.active,
       codeCount: sql<number>`cast(count(${codesTable.id}) filter (where ${codesTable.status} = 'active') as int)`,
       popularity,
@@ -57,9 +59,13 @@ router.get("/brands", async (req, res): Promise<void> => {
 });
 
 // POST /brands/submit — any signed-in user (idea #8, opened up beyond
-// admin-only). Admin submissions go live immediately, matching the
-// original admin-only behavior; everyone else's land as pending, invisible
-// on the public GET /brands until an admin approves it from the panel.
+// admin-only). CreateBrandBody's zod refinements (bare domain, plain-text
+// offer — see lib/api-zod/src/validation.ts) are the actual review: a
+// submission that reaches this handler has already passed them, so it goes
+// live immediately for everyone rather than waiting in a manual queue.
+// Admin submissions are tagged "approved"; everyone else's are tagged
+// "auto_approved" so the admin panel can still surface them for
+// after-the-fact spot-checking (see GET /admin/brands).
 router.post("/brands/submit", requireAuth, async (req: Request & { userId?: string }, res): Promise<void> => {
   const parsed = CreateBrandBody.safeParse(req.body);
   if (!parsed.success) {
@@ -67,7 +73,7 @@ router.post("/brands/submit", requireAuth, async (req: Request & { userId?: stri
     return;
   }
 
-  const { name, domain, category, currentOffer } = parsed.data;
+  const { name, domain, category, country, currentOffer } = parsed.data;
   const userId = req.userId!;
   const admin = await isAdminUser(userId);
 
@@ -81,9 +87,10 @@ router.post("/brands/submit", requireAuth, async (req: Request & { userId?: stri
       slug,
       logoUrl: logoUrl(domain),
       category,
+      ...(country ? { country } : {}),
       currentOffer,
-      active: admin,
-      submissionStatus: admin ? "approved" : "pending",
+      active: true,
+      submissionStatus: admin ? "approved" : "auto_approved",
       submittedBy: userId,
     })
     .returning();
@@ -95,6 +102,7 @@ router.post("/brands/submit", requireAuth, async (req: Request & { userId?: stri
     logoUrl: brand.logoUrl,
     currentOffer: brand.currentOffer,
     category: brand.category,
+    country: brand.country,
     active: brand.active,
     submissionStatus: brand.submissionStatus,
   });
@@ -113,6 +121,7 @@ router.get("/brands/trending", async (_req, res): Promise<void> => {
       currentOffer: b.currentOffer,
       offerUpdatedAt: b.offerUpdatedAt,
       category: b.category,
+      country: b.country,
       active: b.active,
     })),
   );
@@ -134,6 +143,7 @@ router.get("/brands/:slug", async (req, res): Promise<void> => {
       currentOffer: brandsTable.currentOffer,
       offerUpdatedAt: brandsTable.offerUpdatedAt,
       category: brandsTable.category,
+      country: brandsTable.country,
       active: brandsTable.active,
       codeCount: sql<number>`cast(count(${codesTable.id}) filter (where ${codesTable.status} = 'active') as int)`,
     })

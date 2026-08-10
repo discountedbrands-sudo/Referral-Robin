@@ -27,8 +27,10 @@ router.get("/admin/brands", requireAdmin, async (_req, res): Promise<void> => {
       logoUrl: b.logoUrl,
       currentOffer: b.currentOffer,
       category: b.category,
+      country: b.country,
       active: b.active,
       submissionStatus: b.submissionStatus,
+      createdAt: b.createdAt.toISOString(),
     })),
   );
 });
@@ -52,11 +54,12 @@ router.patch("/admin/brands/:brandId", requireAdmin, async (req, res): Promise<v
     return;
   }
 
-  const { name, domain, category, currentOffer, active } = body.data;
+  const { name, domain, category, country, currentOffer, active } = body.data;
   const updates: Partial<typeof brandsTable.$inferInsert> = {};
   if (name !== undefined) updates.name = name;
   if (domain !== undefined) updates.logoUrl = logoUrl(domain);
   if (category !== undefined) updates.category = category;
+  if (country !== undefined) updates.country = country;
   if (currentOffer !== undefined) updates.currentOffer = currentOffer;
   if (active !== undefined) updates.active = active;
 
@@ -82,8 +85,10 @@ router.patch("/admin/brands/:brandId", requireAdmin, async (req, res): Promise<v
     logoUrl: updated.logoUrl,
     currentOffer: updated.currentOffer,
     category: updated.category,
+    country: updated.country,
     active: updated.active,
     submissionStatus: updated.submissionStatus,
+    createdAt: updated.createdAt.toISOString(),
   });
 });
 
@@ -114,8 +119,10 @@ router.post("/admin/brands/:brandId/approve", requireAdmin, async (req, res): Pr
     logoUrl: updated.logoUrl,
     currentOffer: updated.currentOffer,
     category: updated.category,
+    country: updated.country,
     active: updated.active,
     submissionStatus: updated.submissionStatus,
+    createdAt: updated.createdAt.toISOString(),
   });
 });
 
@@ -146,8 +153,10 @@ router.post("/admin/brands/:brandId/reject", requireAdmin, async (req, res): Pro
     logoUrl: updated.logoUrl,
     currentOffer: updated.currentOffer,
     category: updated.category,
+    country: updated.country,
     active: updated.active,
     submissionStatus: updated.submissionStatus,
+    createdAt: updated.createdAt.toISOString(),
   });
 });
 

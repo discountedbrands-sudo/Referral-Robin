@@ -34,20 +34,21 @@ function AdminBrandsScreenInner() {
 
   const isForbidden = (error as any)?.status === 403;
 
-  // Pending submissions float to the top — that's the queue an admin
-  // actually needs to work through; everything else is already settled.
-  const sortedBrands = [...brands].sort((a, b) => {
-    const aPending = a.submissionStatus === 'pending' ? 0 : 1;
-    const bPending = b.submissionStatus === 'pending' ? 0 : 1;
-    if (aPending !== bPending) return aPending - bPending;
-    return a.name.localeCompare(b.name);
-  });
+  const sortedBrands = [...brands].sort((a, b) => a.name.localeCompare(b.name));
 
   const filtered = search.trim()
     ? sortedBrands.filter((b) => b.name.toLowerCase().includes(search.trim().toLowerCase()))
     : sortedBrands;
 
-  const pendingCount = brands.filter((b) => b.submissionStatus === 'pending').length;
+  // Nothing sits in a manual review queue anymore — self-serve submissions
+  // that pass the server's rule-based validation (bare domain, plain-text
+  // offer) publish immediately. This surfaces them for a spot-check
+  // afterward instead: newest first, dropping off the list after 14 days
+  // (an admin either caught it by then or it's fine).
+  const AUTO_APPROVED_WINDOW_MS = 14 * 24 * 60 * 60 * 1000;
+  const autoApprovedRecent = filtered
+    .filter((b) => b.submissionStatus === 'auto_approved' && Date.now() - new Date(b.createdAt).getTime() < AUTO_APPROVED_WINDOW_MS)
+    .sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime());
 
   const invalidateBrandLists = () => {
     queryClient.invalidateQueries({ queryKey: ['/api/admin/brands'] });
@@ -61,6 +62,7 @@ function AdminBrandsScreenInner() {
         brandId: String(brand.id),
         name: brand.name,
         category: brand.category,
+        country: brand.country,
         currentOffer: brand.currentOffer ?? '',
         active: String(brand.active),
       },
@@ -132,9 +134,84 @@ function AdminBrandsScreenInner() {
   const statusMeta = (brand: (typeof brands)[number]) => {
     if (brand.submissionStatus === 'pending') return { label: 'PENDING REVIEW', bg: 'rgba(245, 158, 11, 0.15)', fg: '#f59e0b' };
     if (brand.submissionStatus === 'rejected') return { label: 'REJECTED', bg: 'rgba(239, 68, 68, 0.15)', fg: '#ef4444' };
+    if (brand.submissionStatus === 'auto_approved') return { label: 'AUTO-APPROVED', bg: 'rgba(96, 165, 250, 0.15)', fg: '#60a5fa' };
     if (brand.active) return { label: 'ACTIVE', bg: 'rgba(34, 197, 94, 0.15)', fg: '#4ade80' };
     return { label: 'HIDDEN', bg: colors.muted, fg: colors.mutedForeground };
   };
+
+  // Shared between the "Recently auto-approved" recap section and the main
+  // alphabetical list below it — an auto-approved brand appears in both
+  // (recap for quick action, full list for everything else), same row
+  // component either place. Approve/reject show for 'auto_approved' too,
+  // not just legacy 'pending': approving marks it reviewed (flips it to
+  // "approved", dropping it out of the recap), reject pulls it.
+  const BrandRow = ({ item }: { item: (typeof brands)[number] }) => (
+    <View
+      style={{
+        flexDirection: 'row', alignItems: 'center', gap: 12,
+        borderRadius: 14, backgroundColor: colors.card,
+        borderWidth: 1, borderColor: colors.border,
+        paddingHorizontal: 14, paddingVertical: 10,
+      }}
+    >
+      <View style={{
+        width: 40, height: 40, borderRadius: 8, backgroundColor: '#FFFFFF',
+        alignItems: 'center', justifyContent: 'center', overflow: 'hidden',
+      }}>
+        {item.logoUrl ? (
+          <Image source={{ uri: item.logoUrl }} style={{ width: 30, height: 30 }} resizeMode="contain" />
+        ) : (
+          <Text style={{ fontSize: 14, fontWeight: '700' }}>{item.name.charAt(0)}</Text>
+        )}
+      </View>
+
+      <View style={{ flex: 1, gap: 2 }}>
+        <Text style={{ fontSize: 15, color: colors.foreground, fontWeight: '600' }} numberOfLines={1}>
+          {item.name}
+        </Text>
+        <Text style={{ fontSize: 12, color: colors.mutedForeground }} numberOfLines={1}>
+          {item.category} · {item.country}
+        </Text>
+      </View>
+
+      <View style={{
+        paddingHorizontal: 8, paddingVertical: 3, borderRadius: 8,
+        backgroundColor: statusMeta(item).bg,
+      }}>
+        <Text style={{ fontSize: 11, color: statusMeta(item).fg, fontWeight: '600' }}>
+          {statusMeta(item).label}
+        </Text>
+      </View>
+
+      {(item.submissionStatus === 'pending' || item.submissionStatus === 'auto_approved') && (
+        <>
+          <Pressable
+            onPress={() => handleApprove(item)}
+            hitSlop={8}
+            style={{ padding: 4 }}
+            disabled={approveBrand.isPending}
+          >
+            <Feather name="check-circle" size={18} color="#4ade80" />
+          </Pressable>
+          <Pressable
+            onPress={() => handleReject(item)}
+            hitSlop={8}
+            style={{ padding: 4 }}
+            disabled={rejectBrand.isPending}
+          >
+            <Feather name="x-circle" size={18} color={colors.destructive} />
+          </Pressable>
+        </>
+      )}
+
+      <Pressable onPress={() => handleEdit(item)} hitSlop={8} style={{ padding: 4 }}>
+        <Feather name="edit-2" size={18} color={colors.mutedForeground} />
+      </Pressable>
+      <Pressable onPress={() => handleDelete(item)} hitSlop={8} style={{ padding: 4 }} disabled={deleteBrand.isPending}>
+        <Feather name="trash-2" size={18} color={colors.destructive} />
+      </Pressable>
+    </View>
+  );
 
   return (
     <View style={{ flex: 1, backgroundColor: colors.background }}>
@@ -151,7 +228,7 @@ function AdminBrandsScreenInner() {
           <Feather name="x" size={24} color={colors.foreground} />
         </Pressable>
         <Text style={{ fontSize: 18, color: colors.foreground, fontWeight: '700' }}>
-          Admin: Brands{pendingCount > 0 ? ` (${pendingCount} pending)` : ''}
+          Admin: Brands{autoApprovedRecent.length > 0 ? ` (${autoApprovedRecent.length} to spot-check)` : ''}
         </Text>
         <Pressable
           onPress={() => router.push('/(home)/admin/submit-brand')}
@@ -204,73 +281,20 @@ function AdminBrandsScreenInner() {
             data={filtered}
             keyExtractor={(item) => String(item.id)}
             contentContainerStyle={{ padding: 16, gap: 10, paddingBottom: 100 }}
-            renderItem={({ item }) => (
-              <View
-                style={{
-                  flexDirection: 'row', alignItems: 'center', gap: 12,
-                  borderRadius: 14, backgroundColor: colors.card,
-                  borderWidth: 1, borderColor: colors.border,
-                  paddingHorizontal: 14, paddingVertical: 10,
-                }}
-              >
-                <View style={{
-                  width: 40, height: 40, borderRadius: 8, backgroundColor: '#FFFFFF',
-                  alignItems: 'center', justifyContent: 'center', overflow: 'hidden',
-                }}>
-                  {item.logoUrl ? (
-                    <Image source={{ uri: item.logoUrl }} style={{ width: 30, height: 30 }} resizeMode="contain" />
-                  ) : (
-                    <Text style={{ fontSize: 14, fontWeight: '700' }}>{item.name.charAt(0)}</Text>
-                  )}
-                </View>
-
-                <View style={{ flex: 1, gap: 2 }}>
-                  <Text style={{ fontSize: 15, color: colors.foreground, fontWeight: '600' }} numberOfLines={1}>
-                    {item.name}
+            renderItem={({ item }) => <BrandRow item={item} />}
+            ListHeaderComponent={
+              autoApprovedRecent.length > 0 ? (
+                <View style={{ gap: 10, marginBottom: 16 }}>
+                  <Text style={{ fontSize: 13, color: colors.mutedForeground, fontWeight: '700', textTransform: 'uppercase' }}>
+                    Recently auto-approved — spot-check
                   </Text>
-                  <Text style={{ fontSize: 12, color: colors.mutedForeground }} numberOfLines={1}>
-                    {item.category}
-                  </Text>
+                  {autoApprovedRecent.map((item) => (
+                    <BrandRow key={item.id} item={item} />
+                  ))}
+                  <View style={{ height: 1, backgroundColor: colors.border, marginTop: 6 }} />
                 </View>
-
-                <View style={{
-                  paddingHorizontal: 8, paddingVertical: 3, borderRadius: 8,
-                  backgroundColor: statusMeta(item).bg,
-                }}>
-                  <Text style={{ fontSize: 11, color: statusMeta(item).fg, fontWeight: '600' }}>
-                    {statusMeta(item).label}
-                  </Text>
-                </View>
-
-                {item.submissionStatus === 'pending' && (
-                  <>
-                    <Pressable
-                      onPress={() => handleApprove(item)}
-                      hitSlop={8}
-                      style={{ padding: 4 }}
-                      disabled={approveBrand.isPending}
-                    >
-                      <Feather name="check-circle" size={18} color="#4ade80" />
-                    </Pressable>
-                    <Pressable
-                      onPress={() => handleReject(item)}
-                      hitSlop={8}
-                      style={{ padding: 4 }}
-                      disabled={rejectBrand.isPending}
-                    >
-                      <Feather name="x-circle" size={18} color={colors.destructive} />
-                    </Pressable>
-                  </>
-                )}
-
-                <Pressable onPress={() => handleEdit(item)} hitSlop={8} style={{ padding: 4 }}>
-                  <Feather name="edit-2" size={18} color={colors.mutedForeground} />
-                </Pressable>
-                <Pressable onPress={() => handleDelete(item)} hitSlop={8} style={{ padding: 4 }} disabled={deleteBrand.isPending}>
-                  <Feather name="trash-2" size={18} color={colors.destructive} />
-                </Pressable>
-              </View>
-            )}
+              ) : null
+            }
             ListEmptyComponent={
               <View style={{ alignItems: 'center', paddingTop: 60 }}>
                 <Text style={{ color: colors.mutedForeground, fontSize: 14 }}>No brands match "{search}".</Text>

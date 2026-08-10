@@ -45,6 +45,11 @@ paths:
           required: false
           schema:
             type: string
+        - name: country
+          in: query
+          required: false
+          schema:
+            type: string
         - name: search
           in: query
           required: false
@@ -283,7 +288,7 @@ components:
 
     Brand:
       type: object
-      required: [id, name, slug, category, active]
+      required: [id, name, slug, category, country, active]
       properties:
         id:
           type: number
@@ -298,6 +303,8 @@ components:
         offerUpdatedAt:
           type: ["string", "null"]
         category:
+          type: string
+        country:
           type: string
         active:
           type: boolean

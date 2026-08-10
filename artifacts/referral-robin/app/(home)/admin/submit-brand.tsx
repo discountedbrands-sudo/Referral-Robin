@@ -8,6 +8,7 @@ import { useColors } from '@/hooks/useColors';
 import { useCreateBrand, useUpdateBrand, getListBrandsQueryKey } from '@workspace/api-client-react';
 import { AuthGate } from '@/components/AuthGate';
 import { BRAND_CATEGORIES } from '@/constants/categories';
+import { BRAND_COUNTRIES } from '@/constants/countries';
 import { WEB_TAB_BAR_HEIGHT } from '@/components/WebTabBar';
 
 export default function AddCompanyScreen() {
@@ -19,10 +20,10 @@ export default function AddCompanyScreen() {
 }
 
 // Create mode is open to any signed-in user (idea #8, opened up beyond
-// admin-only) — the server decides the outcome: admin submissions go live
-// immediately, everyone else's land as pending review (see
-// POST /brands/submit). This screen doesn't need to know which case it is
-// ahead of time, just react to submissionStatus in the response.
+// admin-only) — the server rule-validates domain/offer (see
+// POST /brands/submit) and publishes immediately either way; this screen
+// just reacts to submissionStatus in the response to phrase the success
+// message (admin vs. auto-approved-pending-spot-check).
 //
 // Edit mode stays admin-only (requireAdmin server-side) — this screen
 // doesn't duplicate that check client-side either; a non-admin who somehow
@@ -36,7 +37,7 @@ function AddCompanyScreenInner() {
   const insets = useSafeAreaInsets();
   const router = useRouter();
   const queryClient = useQueryClient();
-  const params = useLocalSearchParams<{ name?: string; brandId?: string; category?: string; currentOffer?: string; active?: string }>();
+  const params = useLocalSearchParams<{ name?: string; brandId?: string; category?: string; country?: string; currentOffer?: string; active?: string }>();
 
   const isEdit = !!params.brandId;
   const brandId = isEdit ? Number(params.brandId) : null;
@@ -44,6 +45,7 @@ function AddCompanyScreenInner() {
   const [name, setName] = useState(params.name ?? '');
   const [domain, setDomain] = useState('');
   const [category, setCategory] = useState<string | null>(params.category ?? null);
+  const [country, setCountry] = useState<string>(params.country ?? 'UK');
   const [offer, setOffer] = useState(params.currentOffer ?? '');
   const [active, setActive] = useState(params.active !== 'false');
 
@@ -80,6 +82,7 @@ function AddCompanyScreenInner() {
             name: name.trim(),
             ...(domain.trim() ? { domain: domain.trim() } : {}),
             category,
+            country,
             currentOffer: offer.trim(),
             active,
           },
@@ -88,14 +91,18 @@ function AddCompanyScreenInner() {
       );
     } else {
       createBrand.mutate(
-        { data: { name: name.trim(), domain: domain.trim(), category, currentOffer: offer.trim() } },
+        { data: { name: name.trim(), domain: domain.trim(), category, country, currentOffer: offer.trim() } },
         {
           onSuccess: (data) => {
+            // Everyone goes live immediately now (server-side rule
+            // validation, not manual review) — the wording just tells an
+            // auto-approved (non-admin) submitter that a spot-check may
+            // still follow, without blocking them on it.
             const message =
               data.submissionStatus === 'approved'
                 ? `${name.trim()} has been added and is live.`
-                : `${name.trim()} has been submitted for review. We'll let you know once it's approved.`;
-            notify(data.submissionStatus === 'approved' ? 'Added' : 'Submitted', message);
+                : `${name.trim()} is live! We'll double-check it shortly.`;
+            notify(data.submissionStatus === 'approved' ? 'Added' : 'Live', message);
           },
           onError: (err) => onErr(err, 'Failed to add company.'),
         },
@@ -168,6 +175,28 @@ function AddCompanyScreenInner() {
                 <Pressable
                   key={c}
                   onPress={() => setCategory(c)}
+                  style={{
+                    paddingHorizontal: 14, paddingVertical: 8, borderRadius: 20, borderWidth: 1,
+                    backgroundColor: sel ? colors.primary : colors.muted,
+                    borderColor: sel ? colors.primary : 'transparent',
+                  }}
+                >
+                  <Text style={{ fontSize: 13, color: sel ? '#fff' : colors.mutedForeground }}>{c}</Text>
+                </Pressable>
+              );
+            })}
+          </View>
+        </View>
+
+        <View style={{ gap: 8 }}>
+          <Text style={{ fontSize: 14, color: colors.secondaryForeground }}>Country</Text>
+          <View style={{ flexDirection: 'row', flexWrap: 'wrap', gap: 8 }}>
+            {BRAND_COUNTRIES.map((c) => {
+              const sel = country === c;
+              return (
+                <Pressable
+                  key={c}
+                  onPress={() => setCountry(c)}
                   style={{
                     paddingHorizontal: 14, paddingVertical: 8, borderRadius: 20, borderWidth: 1,
                     backgroundColor: sel ? colors.primary : colors.muted,

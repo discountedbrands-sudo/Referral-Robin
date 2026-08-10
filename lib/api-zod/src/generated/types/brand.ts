@@ -17,6 +17,7 @@ export interface Brand {
   /** @nullable */
   offerUpdatedAt?: string | null;
   category: string;
+  country: string;
   active: boolean;
   /** Number of active codes in the queue */
   codeCount?: number;

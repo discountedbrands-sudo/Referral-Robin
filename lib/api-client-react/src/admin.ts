@@ -14,15 +14,18 @@ import type { ErrorType, BodyType } from './custom-fetch';
 // @workspace/api-zod's admin.ts for why (no codegen pipeline wired up in
 // this repo). Mirrors the same shape/conventions the generated hooks use.
 
-export type BrandSubmissionStatus = 'approved' | 'pending' | 'rejected';
+export type BrandSubmissionStatus = 'approved' | 'auto_approved' | 'pending' | 'rejected';
 
-// --- Submit a brand (any signed-in user — admin submissions go live
-// immediately, everyone else's land as pending) ---
+// --- Submit a brand (any signed-in user — any submission that passes the
+// server's rule-based validation, bare domain + plain-text offer, goes live
+// immediately; see CreateBrandBody in @workspace/api-zod) ---
 
 export interface CreateBrandInput {
   name: string;
   domain: string;
   category: string;
+  /** Defaults to "UK" server-side if omitted. */
+  country?: string;
   currentOffer: string;
 }
 
@@ -32,6 +35,7 @@ export interface CreatedBrand {
   logoUrl?: string | null;
   currentOffer?: string | null;
   category: string;
+  country: string;
   active: boolean;
   submissionStatus: BrandSubmissionStatus;
 }
@@ -66,7 +70,7 @@ export const useCreateBrand = <TError = ErrorType<void>, TContext = unknown>(opt
 
 // --- List all brands (admin only — active, inactive, pending, rejected) ---
 
-export type AdminBrand = CreatedBrand;
+export type AdminBrand = CreatedBrand & { createdAt: string };
 
 export const getListBrandsAdminUrl = () => `/api/admin/brands`;
 
@@ -104,6 +108,7 @@ export interface UpdateBrandInput {
   name?: string;
   domain?: string;
   category?: string;
+  country?: string;
   currentOffer?: string;
   active?: boolean;
 }

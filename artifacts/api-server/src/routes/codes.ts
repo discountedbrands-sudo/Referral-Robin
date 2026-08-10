@@ -1,5 +1,5 @@
 import { Router, type IRouter } from "express";
-import { eq, and } from "drizzle-orm";
+import { eq, and, or, isNull, gt, asc } from "drizzle-orm";
 import { db, brandsTable, codesTable, queueStateTable, deviceCooldownsTable, codeReportsTable, codeServesTable } from "@workspace/db";
 import {
   GetNextCodeBody,
@@ -54,42 +54,76 @@ router.post("/codes/next", requireAuth, async (req, res): Promise<void> => {
     return;
   }
 
-  // 2. Get queue state — build if missing
-  const [queueState] = await db
+  // 2. Submit-your-brand incentive: a code with priorityRemaining > 0 jumps
+  // ahead of the normal weighted queue (oldest such code first) instead of
+  // waiting its turn. This is "ahead of" rotation, not part of it — the
+  // cursor is left untouched here, so it doesn't skew whose turn is next
+  // for everyone else once the priority codes run out.
+  const [priorityCode] = await db
     .select()
-    .from(queueStateTable)
-    .where(eq(queueStateTable.brandId, brandId));
+    .from(codesTable)
+    .where(
+      and(
+        eq(codesTable.brandId, brandId),
+        eq(codesTable.status, "active"),
+        gt(codesTable.priorityRemaining, 0),
+        or(isNull(codesTable.expiresAt), gt(codesTable.expiresAt, now)),
+      ),
+    )
+    .orderBy(asc(codesTable.createdAt))
+    .limit(1);
 
-  let order: number[] = queueState ? JSON.parse(queueState.orderJson) : [];
+  let codeRow: typeof codesTable.$inferSelect;
+  let usedPriority = false;
 
-  if (order.length === 0) {
-    await rebuildQueue(brandId);
-    const [rebuilt] = await db
+  if (priorityCode) {
+    codeRow = priorityCode;
+    usedPriority = true;
+  } else {
+    // 2b. Get queue state — build if missing
+    const [queueState] = await db
       .select()
       .from(queueStateTable)
       .where(eq(queueStateTable.brandId, brandId));
-    order = rebuilt ? JSON.parse(rebuilt.orderJson) : [];
-  }
 
-  if (order.length === 0) {
-    res.status(404).json({ error: "No codes available for this brand" });
-    return;
-  }
+    let order: number[] = queueState ? JSON.parse(queueState.orderJson) : [];
 
-  const cursor = queueState?.cursor ?? 0;
-  const codeId = order[cursor % order.length];
+    if (order.length === 0) {
+      await rebuildQueue(brandId);
+      const [rebuilt] = await db
+        .select()
+        .from(queueStateTable)
+        .where(eq(queueStateTable.brandId, brandId));
+      order = rebuilt ? JSON.parse(rebuilt.orderJson) : [];
+    }
 
-  // 3. Fetch code and brand
-  const [codeRow] = await db
-    .select()
-    .from(codesTable)
-    .where(and(eq(codesTable.id, codeId), eq(codesTable.status, "active")));
+    if (order.length === 0) {
+      res.status(404).json({ error: "No codes available for this brand" });
+      return;
+    }
 
-  if (!codeRow) {
-    // Code was removed since last queue build — rebuild and tell client to retry
-    await rebuildQueue(brandId);
-    res.status(404).json({ error: "No codes available for this brand" });
-    return;
+    const cursor = queueState?.cursor ?? 0;
+    const codeId = order[cursor % order.length];
+
+    const [queuedCode] = await db
+      .select()
+      .from(codesTable)
+      .where(and(eq(codesTable.id, codeId), eq(codesTable.status, "active")));
+
+    if (!queuedCode) {
+      // Code was removed since last queue build — rebuild and tell client to retry
+      await rebuildQueue(brandId);
+      res.status(404).json({ error: "No codes available for this brand" });
+      return;
+    }
+
+    codeRow = queuedCode;
+
+    const newCursor = (cursor + 1) % order.length;
+    await db
+      .update(queueStateTable)
+      .set({ cursor: newCursor })
+      .where(eq(queueStateTable.brandId, brandId));
   }
 
   const [brand] = await db
@@ -102,18 +136,16 @@ router.post("/codes/next", requireAuth, async (req, res): Promise<void> => {
     return;
   }
 
-  // 4. Advance cursor and increment timesServed atomically
-  const newCursor = (cursor + 1) % order.length;
-
+  // 4. Increment timesServed (and consume one priority reveal, if used) atomically
   await Promise.all([
     db
       .update(codesTable)
-      .set({ timesServed: codeRow.timesServed + 1, lastServedAt: now })
-      .where(eq(codesTable.id, codeId)),
-    db
-      .update(queueStateTable)
-      .set({ cursor: newCursor })
-      .where(eq(queueStateTable.brandId, brandId)),
+      .set({
+        timesServed: codeRow.timesServed + 1,
+        lastServedAt: now,
+        ...(usedPriority ? { priorityRemaining: codeRow.priorityRemaining - 1 } : {}),
+      })
+      .where(eq(codesTable.id, codeRow.id)),
     // Timestamped event, distinct from the cumulative timesServed counter
     // above — this is what makes "requests in the last N days" (trending)
     // computable at all. See lib/trending.ts.
@@ -193,9 +225,17 @@ router.post(
       return;
     }
 
+    // Submit-your-brand incentive: the person who submitted this specific
+    // brand gets their own code for it served ahead of normal rotation for
+    // its first 2 reveals (see POST /codes/next's priority short-circuit
+    // below). Scoped to "this exact brand, this exact submitter" so it
+    // can't be farmed by adding empty brand listings — the perk only ever
+    // activates once a real code follows.
+    const priorityRemaining = brand.submittedBy === userId ? 2 : 0;
+
     const [newCode] = await db
       .insert(codesTable)
-      .values({ brandId, code, ownerId: userId, status: "active", weight: 1, tier: "free", expiresAt: expiresAt ? new Date(expiresAt) : null })
+      .values({ brandId, code, ownerId: userId, status: "active", weight: 1, tier: "free", priorityRemaining, expiresAt: expiresAt ? new Date(expiresAt) : null })
       .returning();
 
     // Rebuild queue to include the new code

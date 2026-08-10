@@ -9,6 +9,7 @@ import type { ListBrandsSort } from './listBrandsSort';
 
 export type ListBrandsParams = {
 category?: string;
+country?: string;
 search?: string;
 sort?: ListBrandsSort;
 };

@@ -10,8 +10,10 @@ import { Link, useRouter } from 'expo-router';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { WEB_TAB_BAR_HEIGHT } from '@/components/WebTabBar';
 import { BRAND_CATEGORIES } from '@/constants/categories';
+import { BRAND_COUNTRIES } from '@/constants/countries';
 
 const CATEGORIES = ['All', ...BRAND_CATEGORIES];
+const COUNTRIES = ['All', ...BRAND_COUNTRIES];
 
 export default function ExploreScreen() {
   const colors = useColors();
@@ -20,6 +22,7 @@ export default function ExploreScreen() {
 
   const [search, setSearch] = useState('');
   const [category, setCategory] = useState('All');
+  const [country, setCountry] = useState('All');
   const [sort, setSort] = useState<'name' | 'popular'>('name');
   const [viewMode, setViewMode] = useState<'grid' | 'list'>('grid');
   const [imgErrors, setImgErrors] = useState<Record<string, boolean>>({});
@@ -39,6 +42,7 @@ export default function ExploreScreen() {
   const { data, isLoading, isError } = useListBrands({
     search: search.trim() || undefined,
     category: category === 'All' ? undefined : category,
+    country: country === 'All' ? undefined : country,
     sort,
   });
   // Guard against a malformed/non-array response (e.g. an error page or
@@ -86,6 +90,41 @@ export default function ExploreScreen() {
       )}
     </View>
   );
+
+  // Wraps to multiple rows on wide/desktop screens so every option stays
+  // visible/discoverable at once, but that wrapping eats half the screen on
+  // narrow widths, so scroll horizontally there instead. Shared by both the
+  // category and country chip rows below.
+  const ChipRow = ({ items, selected, onSelect }: { items: readonly string[]; selected: string; onSelect: (item: string) => void }) => {
+    const chip = (item: string) => {
+      const sel = selected === item;
+      return (
+        <Pressable
+          key={item}
+          onPress={() => onSelect(item)}
+          style={{
+            paddingHorizontal: 14, paddingVertical: 6, borderRadius: 20, borderWidth: 1,
+            backgroundColor: sel ? colors.primary : colors.muted,
+            borderColor: sel ? colors.primary : 'transparent',
+          }}
+        >
+          <Text style={{ fontSize: 13, color: sel ? '#fff' : colors.mutedForeground }}>
+            {item}
+          </Text>
+        </Pressable>
+      );
+    };
+
+    return isNarrow ? (
+      <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={{ gap: 8 }}>
+        {items.map(chip)}
+      </ScrollView>
+    ) : (
+      <View style={{ flexDirection: 'row', flexWrap: 'wrap', gap: 8 }}>
+        {items.map(chip)}
+      </View>
+    );
+  };
 
   // Split into rows of `numColumns` for the grid
   const rows: any[][] = [];
@@ -223,53 +262,12 @@ export default function ExploreScreen() {
           </View>
         </View>
 
-        {/* Category chips — wrap to multiple rows on wide/desktop screens so
-            all 10+ categories stay visible/discoverable at once, but that
-            wrapping ate half the screen on narrow widths, so scroll
-            horizontally there instead of wrapping. */}
-        {isNarrow ? (
-          <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={{ gap: 8 }}>
-            {CATEGORIES.map((item) => {
-              const sel = category === item;
-              return (
-                <Pressable
-                  key={item}
-                  onPress={() => setCategory(item)}
-                  style={{
-                    paddingHorizontal: 14, paddingVertical: 6, borderRadius: 20, borderWidth: 1,
-                    backgroundColor: sel ? colors.primary : colors.muted,
-                    borderColor: sel ? colors.primary : 'transparent',
-                  }}
-                >
-                  <Text style={{ fontSize: 13, color: sel ? '#fff' : colors.mutedForeground }}>
-                    {item}
-                  </Text>
-                </Pressable>
-              );
-            })}
-          </ScrollView>
-        ) : (
-          <View style={{ flexDirection: 'row', flexWrap: 'wrap', gap: 8 }}>
-            {CATEGORIES.map((item) => {
-              const sel = category === item;
-              return (
-                <Pressable
-                  key={item}
-                  onPress={() => setCategory(item)}
-                  style={{
-                    paddingHorizontal: 14, paddingVertical: 6, borderRadius: 20, borderWidth: 1,
-                    backgroundColor: sel ? colors.primary : colors.muted,
-                    borderColor: sel ? colors.primary : 'transparent',
-                  }}
-                >
-                  <Text style={{ fontSize: 13, color: sel ? '#fff' : colors.mutedForeground }}>
-                    {item}
-                  </Text>
-                </Pressable>
-              );
-            })}
-          </View>
-        )}
+        {/* Category chips */}
+        <ChipRow items={CATEGORIES} selected={category} onSelect={setCategory} />
+
+        {/* Country chips — defaults to "All" so nothing is hidden unless the
+            user explicitly filters by country. */}
+        <ChipRow items={COUNTRIES} selected={country} onSelect={setCountry} />
       </View>
 
       {/* Content */}

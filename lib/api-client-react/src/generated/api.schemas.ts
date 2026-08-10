@@ -20,6 +20,7 @@ export interface Brand {
   /** @nullable */
   offerUpdatedAt?: string | null;
   category: string;
+  country: string;
   active: boolean;
   /** Number of active codes in the queue */
   codeCount?: number;
@@ -120,6 +121,7 @@ export interface SuccessResult {
 
 export type ListBrandsParams = {
 category?: string;
+country?: string;
 search?: string;
 sort?: ListBrandsSort;
 };

@@ -22,6 +22,7 @@ export const HealthCheckResponse = zod.object({
  */
 export const ListBrandsQueryParams = zod.object({
   "category": zod.coerce.string().optional(),
+  "country": zod.coerce.string().optional(),
   "search": zod.coerce.string().optional(),
   "sort": zod.enum(['name', 'popular']).optional()
 })
@@ -34,6 +35,7 @@ export const ListBrandsResponseItem = zod.object({
   "currentOffer": zod.string().nullish(),
   "offerUpdatedAt": zod.string().nullish(),
   "category": zod.string(),
+  "country": zod.string(),
   "active": zod.boolean(),
   "codeCount": zod.number().optional().describe('Number of active codes in the queue'),
   "popularity": zod.number().optional().describe('All-time sum of timesServed across every code the brand has ever had')
@@ -56,6 +58,7 @@ export const GetBrandResponse = zod.object({
   "currentOffer": zod.string().nullish(),
   "offerUpdatedAt": zod.string().nullish(),
   "category": zod.string(),
+  "country": zod.string(),
   "active": zod.boolean(),
   "codeCount": zod.number().optional().describe('Number of active codes in the queue'),
   "popularity": zod.number().optional().describe('All-time sum of timesServed across every code the brand has ever had')

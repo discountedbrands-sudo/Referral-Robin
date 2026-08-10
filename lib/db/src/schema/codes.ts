@@ -10,6 +10,12 @@ export const codesTable = pgTable("codes", {
   ownerId: text("owner_id").notNull(),
   status: text("status").notNull().default("active"), // "active" | "paused" | "removed"
   weight: integer("weight").notNull().default(1),
+  // Number of remaining reveals (counts down from 2) where this code jumps
+  // ahead of the normal weighted queue instead of waiting its turn — the
+  // submit-your-brand incentive. Only ever set >0 at insert time (see
+  // POST /codes/submit), and only when the code's owner is the same person
+  // who submitted this specific brand — never retroactively adjusted.
+  priorityRemaining: integer("priority_remaining").notNull().default(0),
   tier: text("tier").notNull().default("free"), // "free" | "premium"
   timesServed: integer("times_served").notNull().default(0),
   timesCopied: integer("times_copied").notNull().default(0),
