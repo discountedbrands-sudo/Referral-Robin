@@ -6,7 +6,9 @@ import fs from 'fs';
 import path from 'path';
 import { fileURLToPath } from 'url';
 
-const SITE_URL = 'https://referralrobin.com';
+// www is canonical — see constants/seo.ts's SITE_URL for why (apex domain
+// redirects here; sitemap entries must resolve directly, not via a hop).
+const SITE_URL = 'https://www.referralrobin.com';
 // referralrobin.com itself only serves the static frontend — the API lives
 // on a separate host (Railway). Same default as constants/seo.ts's
 // API_BASE_URL; override with SITEMAP_API_URL=... if that host changes.

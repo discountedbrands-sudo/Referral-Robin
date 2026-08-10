@@ -1,4 +1,8 @@
-export const SITE_URL = 'https://referralrobin.com';
+// www is canonical — the apex domain 308-redirects here (Vercel domain
+// config), so every generated URL (canonical tags, OG, sitemap) must use
+// this form directly rather than one that requires a redirect hop, or
+// crawlers (Googlebot in particular) can fail to fetch it.
+export const SITE_URL = 'https://www.referralrobin.com';
 export const DEFAULT_TITLE = 'Referral Robin – Get Referral Codes, Fairly';
 export const DEFAULT_DESCRIPTION =
   'Banks, apps, insurance, gyms — hundreds of companies give real rewards for referrals. ' +

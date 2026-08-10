@@ -11,7 +11,8 @@ import fs from 'fs';
 import path from 'path';
 import { fileURLToPath } from 'url';
 
-const SITE_URL = 'https://referralrobin.com';
+// www is canonical — see constants/seo.ts's SITE_URL for why.
+const SITE_URL = 'https://www.referralrobin.com';
 const API_BASE_URL = process.env.EXPO_PUBLIC_API_URL || 'https://positive-youth-production-9d09.up.railway.app';
 const OG_IMAGE = `${SITE_URL}/og-image.png`;
 

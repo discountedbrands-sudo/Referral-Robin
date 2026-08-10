@@ -6,4 +6,4 @@ Disallow: /account
 Disallow: /sign-in
 Disallow: /sign-up
 
-Sitemap: https://referralrobin.com/sitemap.xml
+Sitemap: https://www.referralrobin.com/sitemap.xml
