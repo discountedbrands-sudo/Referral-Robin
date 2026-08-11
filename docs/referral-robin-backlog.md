@@ -112,7 +112,7 @@ This file is gitignored on purpose (it has Windows-specific paths), so its conte
 
 ## Pre-launch checklist (things to remember before going live)
 
-- **Logo.dev attribution** — the free tier of logo.dev's Logo API requires an attribution link back to Logo.dev for commercial use (personal projects are exempt, but Referral Robin counts as commercial). Need to add an attribution link somewhere in the app — a footer, an About/Settings screen, or similar — before public launch. Alternatively, check logo.dev's paid plans if attribution isn't wanted.
+- **Logo.dev attribution** — ✅ Done (Aug 11). Added a "Logos provided by Logo.dev" link (→ https://logo.dev) to the homepage footer (`components/LandingScreen.tsx`), next to Privacy Policy / Terms of Service — a publicly accessible page, no sign-in required, satisfying logo.dev's free-tier attribution requirement (https://www.logo.dev/docs/platform/attribution).
 
 ---
 ---

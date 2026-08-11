@@ -1,5 +1,5 @@
 import React, { useRef, useState } from 'react';
-import { View, Text, Pressable, ScrollView, Image, ActivityIndicator, Platform, useWindowDimensions } from 'react-native';
+import { View, Text, Pressable, ScrollView, Image, ActivityIndicator, Platform, useWindowDimensions, Linking } from 'react-native';
 import { useRouter } from 'expo-router';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { Feather } from '@expo/vector-icons';
@@ -469,12 +469,21 @@ export function LandingScreen() {
               </Text>
             </Pressable>
 
-            <View style={{ flexDirection: 'row', gap: 20 }}>
+            <View style={{ flexDirection: 'row', gap: 20, flexWrap: 'wrap', justifyContent: 'center' }}>
               <Pressable onPress={() => router.push('/privacy')} style={{ paddingVertical: 8 }}>
                 <Text style={{ color: colors.mutedForeground, fontSize: 13 }}>Privacy Policy</Text>
               </Pressable>
               <Pressable onPress={() => router.push('/terms')} style={{ paddingVertical: 8 }}>
                 <Text style={{ color: colors.mutedForeground, fontSize: 13 }}>Terms of Service</Text>
+              </Pressable>
+              {/* Required by logo.dev's free-tier terms for commercial use —
+                  a visible attribution link on a publicly accessible page
+                  (this homepage footer, no sign-in required). See
+                  https://www.logo.dev/docs/platform/attribution and the
+                  note above logoUrl() in api-server's routes/brands.ts,
+                  admin.ts, and lib/seed.ts. */}
+              <Pressable onPress={() => Linking.openURL('https://logo.dev')} style={{ paddingVertical: 8 }}>
+                <Text style={{ color: colors.mutedForeground, fontSize: 13 }}>Logos provided by Logo.dev</Text>
               </Pressable>
             </View>
           </View>
