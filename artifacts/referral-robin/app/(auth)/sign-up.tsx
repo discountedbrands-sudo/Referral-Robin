@@ -1,6 +1,6 @@
 import { useSignUp } from '@clerk/expo/legacy';
 import { Link, useRouter } from 'expo-router';
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import {
   Pressable,
   StyleSheet,
@@ -12,10 +12,32 @@ import {
 } from 'react-native';
 import { useColors } from '@/hooks/useColors';
 import { MaterialCommunityIcons } from '@expo/vector-icons';
+import { ReaderBoundary } from '@/components/SafeAuthReader';
+
+// See components/SafeAuthReader.tsx — @clerk/react's assertion can throw
+// even with a real <ClerkProvider> ancestor if clerk-js hasn't finished
+// loading (or failed), e.g. inside Facebook's in-app browser. Isolating the
+// legacy useSignUp() hook here means that only disables this page's submit
+// button (with a friendly error) instead of crashing it outright.
+type SignUpState = {
+  isLoaded: boolean;
+  signUp: ReturnType<typeof useSignUp>['signUp'] | null;
+  setActive: ReturnType<typeof useSignUp>['setActive'] | null;
+};
+const SIGN_UP_UNAVAILABLE: SignUpState = { isLoaded: true, signUp: null, setActive: null };
+
+function SignUpReader({ onChange }: { onChange: (v: SignUpState) => void }) {
+  const { signUp, setActive, isLoaded } = useSignUp();
+  useEffect(() => {
+    onChange({ isLoaded: !!isLoaded, signUp: signUp ?? null, setActive: setActive ?? null });
+  }, [isLoaded, signUp, setActive, onChange]);
+  return null;
+}
 
 export default function SignUpPage() {
   const colors = useColors();
-  const { signUp, setActive, isLoaded } = useSignUp();
+  const [signUpState, setSignUpState] = useState<SignUpState>({ isLoaded: false, signUp: null, setActive: null });
+  const { signUp, setActive, isLoaded } = signUpState;
   const router = useRouter();
 
   const [emailAddress, setEmailAddress] = useState('');
@@ -27,6 +49,10 @@ export default function SignUpPage() {
 
   const handleSubmit = async () => {
     if (!isLoaded || loading) return;
+    if (!signUp) {
+      setError('Sign-up isn\'t available right now — please try again in a moment.');
+      return;
+    }
     setLoading(true);
     setError(null);
     try {
@@ -43,6 +69,10 @@ export default function SignUpPage() {
 
   const handleVerify = async () => {
     if (!isLoaded || loading) return;
+    if (!signUp || !setActive) {
+      setError('Verification isn\'t available right now — please try again in a moment.');
+      return;
+    }
     setLoading(true);
     setError(null);
     try {
@@ -60,7 +90,7 @@ export default function SignUpPage() {
   };
 
   const handleResend = async () => {
-    if (!isLoaded) return;
+    if (!isLoaded || !signUp) return;
     try {
       await signUp.prepareEmailAddressVerification({ strategy: 'email_code' });
     } catch (err: any) {
@@ -73,6 +103,9 @@ export default function SignUpPage() {
   if (pendingVerification) {
     return (
       <View style={[styles.container, { backgroundColor: colors.background }]}>
+        <ReaderBoundary onFail={() => setSignUpState(SIGN_UP_UNAVAILABLE)}>
+          <SignUpReader onChange={setSignUpState} />
+        </ReaderBoundary>
         <View style={styles.header}>
           <View style={[styles.logoContainer, { backgroundColor: colors.primary }]}>
             <MaterialCommunityIcons name="email-check-outline" size={32} color="#FFF" />
@@ -133,6 +166,9 @@ export default function SignUpPage() {
       contentContainerStyle={[styles.container, { backgroundColor: colors.background }]}
       keyboardShouldPersistTaps="handled"
     >
+      <ReaderBoundary onFail={() => setSignUpState(SIGN_UP_UNAVAILABLE)}>
+        <SignUpReader onChange={setSignUpState} />
+      </ReaderBoundary>
       <View style={styles.header}>
         <View style={[styles.logoContainer, { backgroundColor: colors.primary }]}>
           <MaterialCommunityIcons name="bird" size={32} color="#FFF" />

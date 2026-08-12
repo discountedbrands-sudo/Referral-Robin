@@ -1,5 +1,4 @@
 import { useSignIn } from '@clerk/expo/legacy';
-import { useSSO } from '@clerk/expo';
 import { Link, useRouter } from 'expo-router';
 import React, { useCallback, useEffect, useState } from 'react';
 import {
@@ -16,8 +15,29 @@ import { useColors } from '@/hooks/useColors';
 import { MaterialCommunityIcons } from '@expo/vector-icons';
 import * as WebBrowser from 'expo-web-browser';
 import * as AuthSession from 'expo-auth-session';
+import { ReaderBoundary, SafeSSOReader, type StartSSOFlow } from '@/components/SafeAuthReader';
 
 WebBrowser.maybeCompleteAuthSession();
+
+// See components/SafeAuthReader.tsx — @clerk/react's assertion can throw
+// even with a real <ClerkProvider> ancestor if clerk-js hasn't finished
+// loading (or failed), e.g. inside Facebook's in-app browser. Isolating the
+// legacy useSignIn() hook here means that only disables this page's submit
+// button (with a friendly error) instead of crashing it outright.
+type SignInState = {
+  isLoaded: boolean;
+  signIn: ReturnType<typeof useSignIn>['signIn'] | null;
+  setActive: ReturnType<typeof useSignIn>['setActive'] | null;
+};
+const SIGN_IN_UNAVAILABLE: SignInState = { isLoaded: true, signIn: null, setActive: null };
+
+function SignInReader({ onChange }: { onChange: (v: SignInState) => void }) {
+  const { signIn, setActive, isLoaded } = useSignIn();
+  useEffect(() => {
+    onChange({ isLoaded: !!isLoaded, signIn: signIn ?? null, setActive: setActive ?? null });
+  }, [isLoaded, signIn, setActive, onChange]);
+  return null;
+}
 
 export default function SignInPage() {
   useEffect(() => {
@@ -27,8 +47,9 @@ export default function SignInPage() {
   }, []);
 
   const colors = useColors();
-  const { signIn, setActive, isLoaded } = useSignIn();
-  const { startSSOFlow } = useSSO();
+  const [signInState, setSignInState] = useState<SignInState>({ isLoaded: false, signIn: null, setActive: null });
+  const { signIn, setActive, isLoaded } = signInState;
+  const [startSSOFlow, setStartSSOFlow] = useState<StartSSOFlow | null>(null);
   const router = useRouter();
 
   const [emailAddress, setEmailAddress] = useState('');
@@ -38,6 +59,10 @@ export default function SignInPage() {
 
   const handleSubmit = async () => {
     if (!isLoaded || loading) return;
+    if (!signIn || !setActive) {
+      setError('Sign-in isn\'t available right now — please try again in a moment.');
+      return;
+    }
     setLoading(true);
     setError(null);
     try {
@@ -47,7 +72,7 @@ export default function SignInPage() {
       });
       if (result.status === 'complete') {
         await setActive({ session: result.createdSessionId });
-        router.replace('/(home)/(tabs)/');
+        router.replace('/(home)/(tabs)');
       }
     } catch (err: any) {
       const msg = err?.errors?.[0]?.longMessage || err?.errors?.[0]?.message || 'Sign in failed';
@@ -58,6 +83,10 @@ export default function SignInPage() {
   };
 
   const handleGoogleSignIn = useCallback(async () => {
+    if (!startSSOFlow) {
+      setError('Sign-in isn\'t available right now — please try again in a moment.');
+      return;
+    }
     try {
       const { createdSessionId, setActive: activate } = await startSSOFlow({
         strategy: 'oauth_google',
@@ -65,7 +94,7 @@ export default function SignInPage() {
       });
       if (createdSessionId && activate) {
         await activate({ session: createdSessionId });
-        router.replace('/(home)/(tabs)/');
+        router.replace('/(home)/(tabs)');
       }
     } catch (err: any) {
       const msg = err?.errors?.[0]?.longMessage || err?.errors?.[0]?.message || 'Google sign in failed';
@@ -74,7 +103,12 @@ export default function SignInPage() {
   }, [startSSOFlow, router]);
 
   return (
-    <ScrollView
+    <>
+      <ReaderBoundary onFail={() => setSignInState(SIGN_IN_UNAVAILABLE)}>
+        <SignInReader onChange={setSignInState} />
+      </ReaderBoundary>
+      <SafeSSOReader onChange={(fn) => setStartSSOFlow(() => fn)} />
+      <ScrollView
       contentContainerStyle={[styles.container, { backgroundColor: colors.background }]}
       keyboardShouldPersistTaps="handled"
     >
@@ -150,8 +184,10 @@ export default function SignInPage() {
             styles.googleButton,
             { borderColor: colors.border, backgroundColor: colors.card },
             pressed && { opacity: 0.8 },
+            !startSSOFlow && { opacity: 0.5 },
           ]}
           onPress={handleGoogleSignIn}
+          disabled={!startSSOFlow}
         >
           <MaterialCommunityIcons name="google" size={20} color={colors.foreground} />
           <Text style={[styles.googleButtonText, { color: colors.foreground }]}>Continue with Google</Text>
@@ -166,7 +202,8 @@ export default function SignInPage() {
           </Pressable>
         </Link>
       </View>
-    </ScrollView>
+      </ScrollView>
+    </>
   );
 }
 

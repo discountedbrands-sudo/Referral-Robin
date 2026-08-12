@@ -3,9 +3,9 @@ import { View, Text, Pressable, ScrollView, Image, ActivityIndicator, Platform, 
 import { useRouter } from 'expo-router';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { Feather } from '@expo/vector-icons';
-import { useAuth, useUser } from '@clerk/expo';
 import { useColors } from '@/hooks/useColors';
 import { useListBrands, useGetTrendingBrands } from '@workspace/api-client-react';
+import { SafeAuthUserReader, type SafeAuthUserState } from '@/components/SafeAuthReader';
 
 const STEPS = [
   {
@@ -49,9 +49,13 @@ export function LandingScreen() {
   // redirect away from it — see app/index.tsx), so it's also how a signed-in
   // user gets back to the marketing page at all. Nav/CTAs adapt accordingly
   // instead of assuming a signed-out visitor.
-  const { isSignedIn } = useAuth();
-  const { user } = useUser();
-  const initial = (user?.firstName?.[0] || user?.primaryEmailAddress?.emailAddress?.[0] || '?').toUpperCase();
+  // See components/SafeAuthReader.tsx — raw useAuth()/useUser() calls can
+  // throw instead of degrading if Clerk's underlying instance never
+  // finishes loading (e.g. inside Facebook's in-app browser), crashing this
+  // page for a first-time visitor. This degrades to signed-out instead.
+  const [authState, setAuthState] = useState<SafeAuthUserState>({ isLoaded: false, isSignedIn: false, initial: null });
+  const { isSignedIn, initial: userInitial } = authState;
+  const initial = (userInitial || '?').toUpperCase();
 
   const { width } = useWindowDimensions();
   const isWeb = Platform.OS === 'web';
@@ -90,6 +94,7 @@ export function LandingScreen() {
 
   return (
     <View style={{ flex: 1, backgroundColor: colors.background }}>
+      <SafeAuthUserReader onChange={setAuthState} />
       {isWeb && (
         <View
           style={{

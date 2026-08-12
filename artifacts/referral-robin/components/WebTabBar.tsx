@@ -1,9 +1,9 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { View, Text, Pressable } from 'react-native';
 import { useRouter } from 'expo-router';
-import { useUser } from '@clerk/expo';
 import { Feather } from '@expo/vector-icons';
 import { useColors } from '@/hooks/useColors';
+import { SafeAuthUserReader, type SafeAuthUserState } from '@/components/SafeAuthReader';
 
 // Structural subset of @react-navigation/bottom-tabs' real BottomTabBarProps
 // — only the fields this component actually reads. Deliberately not
@@ -24,6 +24,12 @@ type WebTabBarProps = {
 // configured. Same pattern used throughout this codebase for that fallback.
 const rawKey = process.env.EXPO_PUBLIC_CLERK_PUBLISHABLE_KEY || '';
 const hasClerk = rawKey.startsWith('pk_');
+
+// This bar renders on every (tabs) screen (Explore/Dashboard/Account), so a
+// raw useUser() crash here would take down the whole tab shell — not just
+// account-scoped pages. See components/SafeAuthReader.tsx: even with a real
+// key (hasClerk above), useUser() can still throw if clerk-js hasn't
+// finished loading (or failed), e.g. inside Facebook's in-app browser.
 
 // Height of this bar — screens rendered underneath (Explore/Dashboard/Account)
 // need this much extra top padding on web so their own content doesn't start
@@ -52,9 +58,14 @@ export function WebTabBar(props: WebTabBarProps) {
 }
 
 function WebTabBarWithUser(props: WebTabBarProps) {
-  const { user } = useUser();
-  const initial = (user?.firstName?.[0] || user?.primaryEmailAddress?.emailAddress?.[0] || '?').toUpperCase();
-  return <WebTabBarBase {...props} initial={initial} />;
+  const [authState, setAuthState] = useState<SafeAuthUserState>({ isLoaded: false, isSignedIn: false, initial: null });
+  const initial = (authState.initial || '?').toUpperCase();
+  return (
+    <>
+      <SafeAuthUserReader onChange={setAuthState} />
+      <WebTabBarBase {...props} initial={initial} />
+    </>
+  );
 }
 
 function WebTabBarBase({ state, navigation, initial }: WebTabBarProps & { initial: string }) {

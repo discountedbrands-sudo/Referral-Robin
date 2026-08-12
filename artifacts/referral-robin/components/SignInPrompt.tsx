@@ -1,13 +1,22 @@
 import React, { useCallback, useEffect, useState } from 'react';
 import { Modal, View, Text, Pressable, ActivityIndicator, Platform } from 'react-native';
-import { useSSO } from '@clerk/expo';
 import { useRouter } from 'expo-router';
 import { MaterialCommunityIcons } from '@expo/vector-icons';
 import * as WebBrowser from 'expo-web-browser';
 import * as AuthSession from 'expo-auth-session';
 import { useColors } from '@/hooks/useColors';
+import { SafeSSOReader, type StartSSOFlow } from '@/components/SafeAuthReader';
 
 WebBrowser.maybeCompleteAuthSession();
+
+// This component is mounted unconditionally by its callers (visible or not
+// — see app/(home)/brand/[slug].tsx), so a raw useSSO() call here crashes
+// the *host* screen the moment it mounts, not just when the prompt opens.
+// Same underlying issue as components/SafeAuthReader.tsx: @clerk/react's
+// useAssertWrappedByClerkProvider can throw even with a real <ClerkProvider>
+// ancestor if its clerk-js instance hasn't finished loading (or failed) —
+// e.g. inside Facebook's in-app browser. SafeSSOReader isolates it so that
+// only disables the Google button instead of crashing the page.
 
 type Props = {
   visible: boolean;
@@ -29,7 +38,7 @@ type Props = {
 export function SignInPrompt({ visible, onClose, onSignedIn }: Props) {
   const colors = useColors();
   const router = useRouter();
-  const { startSSOFlow } = useSSO();
+  const [startSSOFlow, setStartSSOFlow] = useState<StartSSOFlow | null>(null);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
@@ -44,6 +53,10 @@ export function SignInPrompt({ visible, onClose, onSignedIn }: Props) {
   }, [visible]);
 
   const handleGoogle = useCallback(async () => {
+    if (!startSSOFlow) {
+      setError('Sign-in isn\'t available right now — please try again in a moment.');
+      return;
+    }
     setLoading(true);
     setError(null);
     try {
@@ -69,7 +82,9 @@ export function SignInPrompt({ visible, onClose, onSignedIn }: Props) {
   };
 
   return (
-    <Modal visible={visible} animationType="slide" transparent onRequestClose={onClose}>
+    <>
+      <SafeSSOReader onChange={(fn) => setStartSSOFlow(() => fn)} />
+      <Modal visible={visible} animationType="slide" transparent onRequestClose={onClose}>
       <Pressable
         style={{ flex: 1, backgroundColor: 'rgba(0,0,0,0.6)', justifyContent: 'flex-end' }}
         onPress={onClose}
@@ -101,7 +116,7 @@ export function SignInPrompt({ visible, onClose, onSignedIn }: Props) {
 
             <Pressable
               onPress={handleGoogle}
-              disabled={loading}
+              disabled={loading || !startSSOFlow}
               style={({ pressed }) => ({
                 height: 52,
                 borderRadius: 12,
@@ -144,6 +159,7 @@ export function SignInPrompt({ visible, onClose, onSignedIn }: Props) {
           </View>
         </Pressable>
       </Pressable>
-    </Modal>
+      </Modal>
+    </>
   );
 }

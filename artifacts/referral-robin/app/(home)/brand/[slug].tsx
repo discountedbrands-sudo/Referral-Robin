@@ -2,7 +2,6 @@ import React, { useState, useEffect } from 'react';
 import { View, Text, StyleSheet, Pressable, ActivityIndicator, Alert, Platform } from 'react-native';
 import { useLocalSearchParams, useRouter } from 'expo-router';
 import Head from 'expo-router/head';
-import { useAuth } from '@clerk/expo';
 import { useColors } from '@/hooks/useColors';
 import { useGetBrand, useGetCooldown, useGetNextCode, useConfirmCopy, useReportCode, getGetBrandQueryKey, getGetCooldownQueryKey } from '@workspace/api-client-react';
 import { Feather, MaterialCommunityIcons } from '@expo/vector-icons';
@@ -12,6 +11,7 @@ import * as Clipboard from 'expo-clipboard';
 import * as Haptics from 'expo-haptics';
 import { API_BASE_URL, SITE_URL, OG_IMAGE } from '@/constants/seo';
 import { SignInPrompt } from '@/components/SignInPrompt';
+import { SafeAuthReader, type SafeAuthState } from '@/components/SafeAuthReader';
 
 // Static export (web.output: "static") pre-renders one real HTML file per
 // slug returned here — but only the slugs, not any other data: Expo
@@ -42,7 +42,12 @@ export default function BrandRevealScreen() {
   const insets = useSafeAreaInsets();
   const router = useRouter();
   const deviceId = useDevice();
-  const { isSignedIn } = useAuth();
+  // See components/SafeAuthReader.tsx — a raw useAuth() here can throw
+  // instead of degrading if Clerk's underlying instance never finishes
+  // loading (e.g. inside Facebook's in-app browser), crashing this
+  // otherwise-public page. This degrades to signed-out instead.
+  const [authState, setAuthState] = useState<SafeAuthState>({ isLoaded: false, isSignedIn: false });
+  const { isSignedIn } = authState;
 
   const [revealedCode, setRevealedCode] = useState<{ id: number; code: string } | null>(null);
   const [copied, setCopied] = useState(false);
@@ -246,6 +251,7 @@ export default function BrandRevealScreen() {
   return (
     <>
       {seoHead}
+      <SafeAuthReader onChange={setAuthState} />
       <View style={[styles.container, { backgroundColor: colors.background }]}>
       <View style={[styles.header, { paddingTop: insets.top + 16, backgroundColor: colors.card, borderBottomColor: colors.border }]}>
         <Pressable onPress={() => router.back()} style={styles.backButton}>

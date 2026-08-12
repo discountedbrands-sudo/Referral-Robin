@@ -1,6 +1,6 @@
-import React, { type ReactNode } from 'react';
-import { useAuth } from '@clerk/expo';
+import React, { type ReactNode, useState } from 'react';
 import { Redirect } from 'expo-router';
+import { SafeAuthReader, type SafeAuthState } from '@/components/SafeAuthReader';
 
 // Mirrors the same guard as app/_layout.tsx: only trust a real Clerk key.
 const rawKey = process.env.EXPO_PUBLIC_CLERK_PUBLISHABLE_KEY || '';
@@ -15,9 +15,16 @@ type AuthGateProps = {
 };
 
 function ClerkAuthGate({ whenSignedOut, whenSignedIn, children }: AuthGateProps) {
-  const { isLoaded, isSignedIn } = useAuth();
+  // See components/SafeAuthReader.tsx — a raw useAuth() here can throw even
+  // with a real <ClerkProvider> ancestor if its clerk-js instance hasn't
+  // finished loading (or failed), e.g. inside Facebook's in-app browser.
+  // This degrades to signed-out (redirecting to whenSignedOut, same as a
+  // real signed-out user) instead of crashing every AuthGate-protected
+  // screen (dashboard, submit, submit-brand, account).
+  const [authState, setAuthState] = useState<SafeAuthState>({ isLoaded: false, isSignedIn: false });
+  const { isLoaded, isSignedIn } = authState;
 
-  if (!isLoaded) return null;
+  if (!isLoaded) return <SafeAuthReader onChange={setAuthState} />;
   if (whenSignedOut && !isSignedIn) return <Redirect href={whenSignedOut as any} />;
   if (whenSignedIn && isSignedIn) return <Redirect href={whenSignedIn as any} />;
   return <>{children}</>;
