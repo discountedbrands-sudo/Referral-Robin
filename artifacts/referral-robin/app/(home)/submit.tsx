@@ -1,12 +1,12 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import {
   View, Text, TextInput, Pressable, FlatList,
-  Alert, Switch, Platform,
+  Alert, Switch, Platform, ActivityIndicator,
 } from 'react-native';
-import { useRouter } from 'expo-router';
+import { useRouter, useLocalSearchParams } from 'expo-router';
 import { useQueryClient } from '@tanstack/react-query';
 import { useColors } from '@/hooks/useColors';
-import { useListBrands, useSubmitCode, getGetUserCodesQueryKey, getGetUserStatsQueryKey } from '@workspace/api-client-react';
+import { useListBrands, useSubmitCode, useGetBrand, getGetBrandQueryKey, getGetUserCodesQueryKey, getGetUserStatsQueryKey } from '@workspace/api-client-react';
 import { Feather } from '@expo/vector-icons';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import * as Haptics from 'expo-haptics';
@@ -26,6 +26,12 @@ function SubmitScreenInner() {
   const insets = useSafeAreaInsets();
   const router = useRouter();
 
+  // Set only when the FAB was tapped from a specific brand's page (see
+  // components/AddFab.tsx) — reuses the same brand query the brand detail
+  // screen already ran (same hook + query key), so this is a cache hit in
+  // the common case rather than a duplicate lookup.
+  const { brandSlug } = useLocalSearchParams<{ brandSlug?: string }>();
+
   const [search, setSearch] = useState('');
   const [selectedBrand, setSelectedBrand] = useState<{ id: number; name: string } | null>(null);
   const [code, setCode] = useState('');
@@ -34,8 +40,25 @@ function SubmitScreenInner() {
   const [expiryError, setExpiryError] = useState('');
 
   const { data: brands = [] } = useListBrands({ search: search.trim() || undefined });
+  const { data: prefillBrand, isError: isPrefillError } = useGetBrand(brandSlug ?? '', {
+    query: { queryKey: getGetBrandQueryKey(brandSlug ?? ''), enabled: !!brandSlug },
+  });
   const queryClient = useQueryClient();
   const submitCode = useSubmitCode();
+
+  useEffect(() => {
+    if (prefillBrand && !selectedBrand) {
+      setSelectedBrand({ id: prefillBrand.id, name: prefillBrand.name });
+    }
+  }, [prefillBrand]);
+
+  // Locked in from a brand page — skip the picker entirely, and don't let
+  // the chip below be tapped to go back to it.
+  const brandLocked = !!brandSlug && !isPrefillError;
+  // Still resolving the pre-fill brand — don't flash the picker in the
+  // meantime. If the lookup fails (e.g. a stale/bad slug), fall through to
+  // the normal picker instead of getting stuck here.
+  const showPrefillLoading = !!brandSlug && !isPrefillError && !selectedBrand;
 
   const resetForm = () => {
     setSelectedBrand(null);
@@ -108,7 +131,11 @@ function SubmitScreenInner() {
       </View>
 
       {/* Brand picker */}
-      {!selectedBrand ? (
+      {showPrefillLoading ? (
+        <View style={{ flex: 1, alignItems: 'center', justifyContent: 'center' }}>
+          <ActivityIndicator size="large" color={colors.primary} />
+        </View>
+      ) : !selectedBrand ? (
         <View style={{ flex: 1, padding: 16 }}>
           <Text style={{ fontSize: 14, color: colors.secondaryForeground, marginBottom: 8, marginLeft: 4 }}>
             Select a Brand
@@ -150,20 +177,22 @@ function SubmitScreenInner() {
         </View>
       ) : (
         <View style={{ flex: 1, padding: 16, gap: 24 }}>
-          {/* Selected brand chip */}
+          {/* Selected brand chip — locked (no tap-to-change) when it came
+              pre-filled from a brand's own page via the FAB. */}
           <Pressable
             style={{
               flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between',
               padding: 16, borderRadius: 12, borderWidth: 1,
               backgroundColor: colors.muted, borderColor: colors.border,
             }}
-            onPress={resetForm}
+            onPress={brandLocked ? undefined : resetForm}
+            disabled={brandLocked}
           >
             <View>
               <Text style={{ fontSize: 12, color: colors.mutedForeground, marginBottom: 2 }}>Brand</Text>
               <Text style={{ fontSize: 18, color: colors.foreground }}>{selectedBrand.name}</Text>
             </View>
-            <Feather name="edit-2" size={16} color={colors.mutedForeground} />
+            {!brandLocked && <Feather name="edit-2" size={16} color={colors.mutedForeground} />}
           </Pressable>
 
           {/* Code input */}

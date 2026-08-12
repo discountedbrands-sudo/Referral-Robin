@@ -26,7 +26,6 @@ export default function ExploreScreen() {
   const [sort, setSort] = useState<'name' | 'popular'>('name');
   const [viewMode, setViewMode] = useState<'grid' | 'list'>('grid');
   const [imgErrors, setImgErrors] = useState<Record<string, boolean>>({});
-  const [fabOpen, setFabOpen] = useState(false);
 
   const { width } = useWindowDimensions();
   // 2 columns on native (phone-width) and narrow web; scales up to 4 on a
@@ -185,37 +184,6 @@ export default function ExploreScreen() {
       <Text style={{ fontSize: 10, color: colors.mutedForeground, marginTop: 8 }} numberOfLines={1}>
         {item.codeCount} code{item.codeCount !== 1 ? 's' : ''}
       </Text>
-    </Pressable>
-  );
-
-  // One row of the expanded FAB menu — a text label chip next to a circular
-  // icon button, right-aligned at a fixed height above the main FAB.
-  const FabOption = ({
-    icon, label, onPress, bottom,
-  }: { icon: React.ComponentProps<typeof Feather>['name']; label: string; onPress: () => void; bottom: number }) => (
-    <Pressable
-      accessibilityLabel={label}
-      onPress={onPress}
-      style={{
-        position: 'absolute', right: 20, bottom,
-        flexDirection: 'row', alignItems: 'center', gap: 10,
-      }}
-    >
-      <View style={{
-        paddingHorizontal: 12, paddingVertical: 7, borderRadius: 8,
-        backgroundColor: colors.card, borderWidth: 1, borderColor: colors.border,
-        shadowColor: '#000', shadowOffset: { width: 0, height: 2 }, shadowOpacity: 0.2, shadowRadius: 3, elevation: 4,
-      }}>
-        <Text style={{ fontSize: 13, color: colors.foreground, fontWeight: '600' }}>{label}</Text>
-      </View>
-      <View style={{
-        width: 44, height: 44, borderRadius: 22,
-        alignItems: 'center', justifyContent: 'center',
-        backgroundColor: colors.card, borderWidth: 1, borderColor: colors.border,
-        shadowColor: '#000', shadowOffset: { width: 0, height: 3 }, shadowOpacity: 0.25, shadowRadius: 5, elevation: 5,
-      }}>
-        <Feather name={icon} size={18} color={colors.foreground} />
-      </View>
     </Pressable>
   );
 
@@ -397,62 +365,6 @@ export default function ExploreScreen() {
           </Link>
         ))}
       </ScrollView>
-
-      {/* Expandable FAB — a single "+" button that reveals two labeled
-          options (Gmail-compose style) instead of two permanently-stacked,
-          unlabeled buttons. Same destinations as before: submit-brand
-          (open to any signed-in user, despite the URL — server decides
-          admin vs. auto-approve outcome) and the code-submit form. */}
-      {fabOpen && (
-        <Pressable
-          accessibilityLabel="Close menu"
-          onPress={() => setFabOpen(false)}
-          style={{
-            position: 'absolute', top: 0, left: 0, right: 0, bottom: 0,
-            backgroundColor: 'rgba(0,0,0,0.3)',
-          }}
-        />
-      )}
-
-      {fabOpen && (
-        <FabOption
-          icon="tag"
-          label="Add Brand"
-          onPress={() => {
-            setFabOpen(false);
-            router.push('/(home)/admin/submit-brand');
-          }}
-          bottom={insets.bottom + (Platform.OS === 'ios' ? 80 : 90) + 70}
-        />
-      )}
-
-      {fabOpen && (
-        <FabOption
-          icon="hash"
-          label="Add Code"
-          onPress={() => {
-            setFabOpen(false);
-            router.push('/(home)/submit');
-          }}
-          bottom={insets.bottom + (Platform.OS === 'ios' ? 80 : 90) + 14}
-        />
-      )}
-
-      <Pressable
-        accessibilityLabel={fabOpen ? 'Close menu' : 'Add brand or code'}
-        onPress={() => setFabOpen((o) => !o)}
-        style={{
-          position: 'absolute', right: 20,
-          bottom: insets.bottom + (Platform.OS === 'ios' ? 80 : 90),
-          width: 54, height: 54, borderRadius: 27,
-          alignItems: 'center', justifyContent: 'center',
-          backgroundColor: colors.primary,
-          shadowColor: '#000', shadowOffset: { width: 0, height: 4 },
-          shadowOpacity: 0.3, shadowRadius: 6, elevation: 6,
-        }}
-      >
-        <Feather name={fabOpen ? 'x' : 'plus'} size={24} color="#fff" />
-      </Pressable>
     </View>
   );
 }
