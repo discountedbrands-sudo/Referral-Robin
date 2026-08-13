@@ -1,10 +1,14 @@
 import React, { useState } from 'react';
-import { View, Text, TextInput, Pressable, FlatList, ActivityIndicator, Platform } from 'react-native';
+import { View, Text, TextInput, Pressable, FlatList, ActivityIndicator, Platform, Alert } from 'react-native';
 import { useRouter, useLocalSearchParams } from 'expo-router';
+import { useQueryClient } from '@tanstack/react-query';
 import { Feather } from '@expo/vector-icons';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useColors } from '@/hooks/useColors';
-import { useListCodesForBrand, type AdminCode, type CodeStatus } from '@workspace/api-client-react';
+import {
+  useListCodesForBrand, useRemoveCode, getListCodesForBrandQueryKey,
+  type AdminCode, type CodeStatus,
+} from '@workspace/api-client-react';
 import { AuthGate } from '@/components/AuthGate';
 import { WEB_TAB_BAR_HEIGHT } from '@/components/WebTabBar';
 import { formatDateInput } from '@/utils/parseDateInput';
@@ -44,12 +48,14 @@ function AdminBrandCodesScreenInner() {
   const colors = useColors();
   const insets = useSafeAreaInsets();
   const router = useRouter();
+  const queryClient = useQueryClient();
   const { brandId, brandName } = useLocalSearchParams<{ brandId: string; brandName?: string }>();
 
   const [search, setSearch] = useState('');
   const [statusFilter, setStatusFilter] = useState<CodeStatus | 'all'>('all');
 
   const { data: codes = [], isLoading, isError, error } = useListCodesForBrand(Number(brandId));
+  const removeCode = useRemoveCode();
   const isForbidden = (error as any)?.status === 403;
 
   const filtered = codes.filter((c) => {
@@ -58,6 +64,37 @@ function AdminBrandCodesScreenInner() {
     const q = search.trim().toLowerCase();
     return c.code.toLowerCase().includes(q) || (c.ownerEmail ?? '').toLowerCase().includes(q);
   });
+
+  // Soft delete (status -> "removed", row kept) — same mechanism the
+  // report-threshold auto-remove already uses, just admin-triggered. No
+  // hard delete here on purpose: nothing about this action is unrecoverable.
+  const doRemove = (item: AdminCode) => {
+    removeCode.mutate(
+      { codeId: item.id },
+      {
+        onSuccess: () => {
+          queryClient.invalidateQueries({ queryKey: getListCodesForBrandQueryKey(Number(brandId)) });
+        },
+        onError: (err: any) => {
+          const message = err?.data?.error || 'Failed to remove code.';
+          if (Platform.OS === 'web') window.alert(message);
+          else Alert.alert('Error', message);
+        },
+      },
+    );
+  };
+
+  const handleRemove = (item: AdminCode) => {
+    const message = `Remove this code? It'll stop being served immediately. This can't be undone from here.`;
+    if (Platform.OS === 'web') {
+      if (window.confirm(message)) doRemove(item);
+      return;
+    }
+    Alert.alert('Remove code', message, [
+      { text: 'Cancel', style: 'cancel' },
+      { text: 'Remove', style: 'destructive', onPress: () => doRemove(item) },
+    ]);
+  };
 
   const CodeRow = ({ item }: { item: AdminCode }) => {
     const meta = statusMeta[item.status];
@@ -78,6 +115,16 @@ function AdminBrandCodesScreenInner() {
           <View style={{ paddingHorizontal: 8, paddingVertical: 3, borderRadius: 8, backgroundColor: meta.bg }}>
             <Text style={{ fontSize: 11, color: meta.fg, fontWeight: '600' }}>{meta.label}</Text>
           </View>
+          {item.status !== 'removed' && (
+            <Pressable
+              onPress={() => handleRemove(item)}
+              hitSlop={8}
+              style={{ padding: 2 }}
+              disabled={removeCode.isPending}
+            >
+              <Feather name="trash-2" size={16} color={colors.destructive} />
+            </Pressable>
+          )}
         </View>
 
         <Text style={{ fontSize: 13, color: colors.secondaryForeground }} numberOfLines={1}>

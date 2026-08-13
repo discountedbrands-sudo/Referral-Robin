@@ -270,3 +270,29 @@ export const useListCodesForBrand = <TData = AdminCode[], TError = ErrorType<unk
   const query = useQuery(queryOptions) as UseQueryResult<TData, TError> & { queryKey: QueryKey };
   return { ...query, queryKey: queryOptions.queryKey };
 };
+
+// --- Remove a code (admin only — soft delete: status -> "removed", pulled
+// from rotation immediately, row kept — see AdminCode['status']) ---
+
+export const getRemoveCodeUrl = (codeId: number) => `/api/admin/codes/${codeId}/remove`;
+
+/**
+ * @summary Remove a code (admin only)
+ */
+export const removeCode = async (
+  codeId: number,
+  options?: Parameters<typeof customFetch>[1],
+): Promise<{ success: boolean }> => {
+  return customFetch<{ success: boolean }>(getRemoveCodeUrl(codeId), { ...options, method: 'POST' });
+};
+
+export const useRemoveCode = <TError = ErrorType<void>, TContext = unknown>(options?: {
+  mutation?: UseMutationOptions<{ success: boolean }, TError, { codeId: number }, TContext>;
+  request?: Parameters<typeof customFetch>[1];
+}): UseMutationResult<{ success: boolean }, TError, { codeId: number }, TContext> => {
+  const { mutation: mutationOptions, request: requestOptions } = options ?? {};
+  return useMutation({
+    mutationFn: ({ codeId }) => removeCode(codeId, requestOptions),
+    ...mutationOptions,
+  });
+};

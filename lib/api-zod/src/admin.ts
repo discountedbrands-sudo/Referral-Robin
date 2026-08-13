@@ -106,3 +106,16 @@ export const AdminCodeListItem = zod.object({
   expiresAt: zod.string().nullable(),
 });
 export const AdminBrandCodesResponse = zod.array(AdminCodeListItem);
+
+/**
+ * @summary Remove a code (admin only) — soft delete: status becomes
+ * "removed" and the code is pulled from rotation immediately, but the row
+ * is kept (not a hard delete).
+ */
+export const AdminCodeParams = zod.object({
+  codeId: zod.coerce.number(),
+});
+
+export const RemoveCodeResponse = zod.object({
+  success: zod.boolean(),
+});

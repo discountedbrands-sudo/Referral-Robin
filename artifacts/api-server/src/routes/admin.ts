@@ -2,9 +2,10 @@ import { Router, type IRouter } from "express";
 import { eq, desc } from "drizzle-orm";
 import { clerkClient } from "@clerk/express";
 import { db, brandsTable, codesTable } from "@workspace/db";
-import { AdminBrandParams, AdminBrandCodesParams, UpdateBrandBody } from "@workspace/api-zod";
+import { AdminBrandParams, AdminBrandCodesParams, AdminCodeParams, UpdateBrandBody } from "@workspace/api-zod";
 import { requireAdmin } from "../lib/auth";
 import { firstIssueMessage } from "../lib/zodError";
+import { rebuildQueue } from "../lib/queue";
 
 const router: IRouter = Router();
 
@@ -248,6 +249,37 @@ router.get("/admin/brands/:brandId/codes", requireAdmin, async (req, res): Promi
       expiresAt: c.expiresAt?.toISOString() ?? null,
     })),
   );
+});
+
+// POST /admin/codes/:codeId/remove — admin-only: soft-delete (status set to
+// "removed", row kept), pulled from the active rotation immediately via the
+// same rebuildQueue() call the report-threshold auto-remove path already
+// uses (see POST /codes/:codeId/report) — this is that same mechanism,
+// admin-triggered instead of triggered by 3 distinct-device reports. Kept as
+// a status flip rather than a hard delete so nothing here is unrecoverable,
+// and so backlog item #1's eventual quarantine flow can share this same
+// status-based pattern instead of needing a second removal mechanism.
+router.post("/admin/codes/:codeId/remove", requireAdmin, async (req, res): Promise<void> => {
+  const params = AdminCodeParams.safeParse(req.params);
+  if (!params.success) {
+    res.status(400).json({ error: firstIssueMessage(params.error) });
+    return;
+  }
+
+  const [updated] = await db
+    .update(codesTable)
+    .set({ status: "removed" })
+    .where(eq(codesTable.id, params.data.codeId))
+    .returning();
+
+  if (!updated) {
+    res.status(404).json({ error: "Code not found" });
+    return;
+  }
+
+  await rebuildQueue(updated.brandId);
+
+  res.json({ success: true });
 });
 
 export default router;
