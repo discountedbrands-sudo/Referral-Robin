@@ -82,3 +82,27 @@ export const ReviewBrandResponse = CreateBrandResponse;
 export const DeleteBrandResponse = zod.object({
   success: zod.boolean(),
 });
+
+/**
+ * @summary List every code submitted for a brand (admin only) — full audit
+ * view, not scoped to the caller like GET /user/codes.
+ */
+export const AdminBrandCodesParams = zod.object({
+  brandId: zod.coerce.number(),
+});
+
+export const CodeStatus = zod.enum(["active", "paused", "removed"]);
+
+export const AdminCodeListItem = zod.object({
+  id: zod.number(),
+  code: zod.string(),
+  ownerId: zod.string(),
+  ownerEmail: zod.string().nullable(),
+  status: CodeStatus,
+  timesServed: zod.number(),
+  timesCopied: zod.number(),
+  reportCount: zod.number(),
+  createdAt: zod.string(),
+  expiresAt: zod.string().nullable(),
+});
+export const AdminBrandCodesResponse = zod.array(AdminCodeListItem);

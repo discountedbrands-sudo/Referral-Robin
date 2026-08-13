@@ -55,6 +55,13 @@ function AdminBrandsScreenInner() {
     queryClient.invalidateQueries({ queryKey: getListBrandsQueryKey() });
   };
 
+  const handleViewCodes = (brand: (typeof brands)[number]) => {
+    router.push({
+      pathname: '/(home)/admin/brand-codes',
+      params: { brandId: String(brand.id), brandName: brand.name },
+    });
+  };
+
   const handleEdit = (brand: (typeof brands)[number]) => {
     router.push({
       pathname: '/(home)/admin/submit-brand',
@@ -204,6 +211,9 @@ function AdminBrandsScreenInner() {
         </>
       )}
 
+      <Pressable onPress={() => handleViewCodes(item)} hitSlop={8} style={{ padding: 4 }}>
+        <Feather name="list" size={18} color={colors.mutedForeground} />
+      </Pressable>
       <Pressable onPress={() => handleEdit(item)} hitSlop={8} style={{ padding: 4 }}>
         <Feather name="edit-2" size={18} color={colors.mutedForeground} />
       </Pressable>

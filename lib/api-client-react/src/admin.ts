@@ -207,3 +207,66 @@ export const useDeleteBrand = <TError = ErrorType<void>, TContext = unknown>(opt
     ...mutationOptions,
   });
 };
+
+// --- List every code submitted for a brand (admin only — full audit view,
+// not scoped to the caller like useGetUserCodes) ---
+
+export type CodeStatus = 'active' | 'paused' | 'removed';
+
+export interface AdminCode {
+  id: number;
+  code: string;
+  ownerId: string;
+  ownerEmail: string | null;
+  status: CodeStatus;
+  timesServed: number;
+  timesCopied: number;
+  reportCount: number;
+  createdAt: string;
+  expiresAt: string | null;
+}
+
+export const getListCodesForBrandUrl = (brandId: number) => `/api/admin/brands/${brandId}/codes`;
+
+/**
+ * @summary List every code submitted for a brand (admin only)
+ */
+export const listCodesForBrand = async (
+  brandId: number,
+  options?: Parameters<typeof customFetch>[1],
+): Promise<AdminCode[]> => {
+  return customFetch<AdminCode[]>(getListCodesForBrandUrl(brandId), { ...options, method: 'GET' });
+};
+
+export const getListCodesForBrandQueryKey = (brandId: number) => [`/api/admin/brands/${brandId}/codes`] as const;
+
+export const getListCodesForBrandQueryOptions = <TData = AdminCode[], TError = ErrorType<unknown>>(
+  brandId: number,
+  options?: {
+    query?: UseQueryOptions<AdminCode[], TError, TData>;
+    request?: Parameters<typeof customFetch>[1];
+  },
+) => {
+  const { query: queryOptions, request: requestOptions } = options ?? {};
+  const queryKey = queryOptions?.queryKey ?? getListCodesForBrandQueryKey(brandId);
+  const queryFn: QueryFunction<AdminCode[]> = ({ signal }) =>
+    listCodesForBrand(brandId, { signal, ...requestOptions });
+  return {
+    queryKey,
+    queryFn,
+    enabled: !!brandId,
+    ...queryOptions,
+  } as UseQueryOptions<AdminCode[], TError, TData> & { queryKey: QueryKey };
+};
+
+export const useListCodesForBrand = <TData = AdminCode[], TError = ErrorType<unknown>>(
+  brandId: number,
+  options?: {
+    query?: UseQueryOptions<AdminCode[], TError, TData>;
+    request?: Parameters<typeof customFetch>[1];
+  },
+): UseQueryResult<TData, TError> & { queryKey: QueryKey } => {
+  const queryOptions = getListCodesForBrandQueryOptions(brandId, options);
+  const query = useQuery(queryOptions) as UseQueryResult<TData, TError> & { queryKey: QueryKey };
+  return { ...query, queryKey: queryOptions.queryKey };
+};

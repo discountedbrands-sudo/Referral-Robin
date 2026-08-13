@@ -1,7 +1,8 @@
 import { Router, type IRouter } from "express";
-import { eq } from "drizzle-orm";
-import { db, brandsTable } from "@workspace/db";
-import { AdminBrandParams, UpdateBrandBody } from "@workspace/api-zod";
+import { eq, desc } from "drizzle-orm";
+import { clerkClient } from "@clerk/express";
+import { db, brandsTable, codesTable } from "@workspace/db";
+import { AdminBrandParams, AdminBrandCodesParams, UpdateBrandBody } from "@workspace/api-zod";
 import { requireAdmin } from "../lib/auth";
 import { firstIssueMessage } from "../lib/zodError";
 
@@ -192,6 +193,61 @@ router.delete("/admin/brands/:brandId", requireAdmin, async (req, res): Promise<
     }
     throw err;
   }
+});
+
+// GET /admin/brands/:brandId/codes — admin-only: every code ever submitted
+// for a brand (active, paused/owner-retired, and removed/report-moderated),
+// not just the caller's own — for auditing coverage/duplicates/quality.
+// Distinct from GET /user/codes, which is scoped to the signed-in user.
+router.get("/admin/brands/:brandId/codes", requireAdmin, async (req, res): Promise<void> => {
+  const params = AdminBrandCodesParams.safeParse(req.params);
+  if (!params.success) {
+    res.status(400).json({ error: firstIssueMessage(params.error) });
+    return;
+  }
+
+  const codes = await db
+    .select()
+    .from(codesTable)
+    .where(eq(codesTable.brandId, params.data.brandId))
+    .orderBy(desc(codesTable.createdAt));
+
+  // Owner email isn't stored locally — usersTable exists in the schema but
+  // nothing in this codebase ever inserts into it, so the only source of
+  // truth for "who submitted this" is Clerk itself. Batch-resolve by the
+  // distinct owner ids actually present rather than one Clerk call per code.
+  const ownerIds = [...new Set(codes.map((c) => c.ownerId))];
+  const emailByOwnerId = new Map<string, string>();
+  if (ownerIds.length > 0) {
+    try {
+      const { data: users } = await clerkClient.users.getUserList({
+        userId: ownerIds,
+        limit: ownerIds.length,
+      });
+      for (const u of users) {
+        const email = u.primaryEmailAddress?.emailAddress ?? u.emailAddresses[0]?.emailAddress;
+        if (email) emailByOwnerId.set(u.id, email);
+      }
+    } catch {
+      // Owner email is a display nicety here, not load-bearing — degrade to
+      // the raw owner id (below) rather than failing the whole list.
+    }
+  }
+
+  res.json(
+    codes.map((c) => ({
+      id: c.id,
+      code: c.code,
+      ownerId: c.ownerId,
+      ownerEmail: emailByOwnerId.get(c.ownerId) ?? null,
+      status: c.status,
+      timesServed: c.timesServed,
+      timesCopied: c.timesCopied,
+      reportCount: c.reportCount,
+      createdAt: c.createdAt.toISOString(),
+      expiresAt: c.expiresAt?.toISOString() ?? null,
+    })),
+  );
 });
 
 export default router;
