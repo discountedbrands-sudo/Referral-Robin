@@ -119,3 +119,11 @@ export const AdminCodeParams = zod.object({
 export const RemoveCodeResponse = zod.object({
   success: zod.boolean(),
 });
+
+/**
+ * @summary Site-wide admin counts (admin only) — currently just how many
+ * codes are live in rotation.
+ */
+export const AdminStatsResponse = zod.object({
+  activeCodeCount: zod.number(),
+});

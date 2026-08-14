@@ -5,7 +5,7 @@ import { useQueryClient } from '@tanstack/react-query';
 import { Feather } from '@expo/vector-icons';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useColors } from '@/hooks/useColors';
-import { useListBrandsAdmin, useDeleteBrand, useApproveBrand, useRejectBrand, getListBrandsQueryKey } from '@workspace/api-client-react';
+import { useListBrandsAdmin, useDeleteBrand, useApproveBrand, useRejectBrand, useAdminStats, getAdminStatsQueryKey, getListBrandsQueryKey } from '@workspace/api-client-react';
 import { AuthGate } from '@/components/AuthGate';
 import { WEB_TAB_BAR_HEIGHT } from '@/components/WebTabBar';
 
@@ -28,6 +28,13 @@ function AdminBrandsScreenInner() {
 
   const [search, setSearch] = useState('');
   const { data: brands = [], isLoading, isError, error } = useListBrandsAdmin();
+
+  // Live count of codes currently in rotation — tucked behind a tap on the
+  // header title rather than always shown, so it doesn't compete with the
+  // brand list for attention. enabled:false until revealed, so it's not
+  // even fetched unless someone actually taps.
+  const [statsRevealed, setStatsRevealed] = useState(false);
+  const { data: stats } = useAdminStats({ query: { queryKey: getAdminStatsQueryKey(), enabled: statsRevealed } });
   const deleteBrand = useDeleteBrand();
   const approveBrand = useApproveBrand();
   const rejectBrand = useRejectBrand();
@@ -237,9 +244,16 @@ function AdminBrandsScreenInner() {
         <Pressable onPress={() => router.back()} style={{ width: 44, height: 44, justifyContent: 'center', alignItems: 'center' }}>
           <Feather name="x" size={24} color={colors.foreground} />
         </Pressable>
-        <Text style={{ fontSize: 18, color: colors.foreground, fontWeight: '700' }}>
-          Admin: Brands{autoApprovedRecent.length > 0 ? ` (${autoApprovedRecent.length} to spot-check)` : ''}
-        </Text>
+        <Pressable onPress={() => setStatsRevealed((v) => !v)} style={{ alignItems: 'center' }}>
+          <Text style={{ fontSize: 18, color: colors.foreground, fontWeight: '700' }}>
+            Admin: Brands{autoApprovedRecent.length > 0 ? ` (${autoApprovedRecent.length} to spot-check)` : ''}
+          </Text>
+          {statsRevealed && (
+            <Text style={{ fontSize: 12, color: colors.mutedForeground, marginTop: 2 }}>
+              {stats ? `${stats.activeCodeCount} codes online` : 'Loading…'}
+            </Text>
+          )}
+        </Pressable>
         <Pressable
           onPress={() => router.push('/(home)/admin/submit-brand')}
           style={{ width: 44, height: 44, justifyContent: 'center', alignItems: 'center' }}

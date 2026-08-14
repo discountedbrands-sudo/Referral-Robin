@@ -1,5 +1,5 @@
 import { Router, type IRouter } from "express";
-import { eq, desc } from "drizzle-orm";
+import { eq, desc, sql } from "drizzle-orm";
 import { clerkClient } from "@clerk/express";
 import { db, brandsTable, codesTable } from "@workspace/db";
 import { AdminBrandParams, AdminBrandCodesParams, AdminCodeParams, UpdateBrandBody } from "@workspace/api-zod";
@@ -280,6 +280,19 @@ router.post("/admin/codes/:codeId/remove", requireAdmin, async (req, res): Promi
   await rebuildQueue(updated.brandId);
 
   res.json({ success: true });
+});
+
+// GET /admin/stats — admin-only: site-wide counts, currently just how many
+// codes are live in rotation ("online" = status: "active"). Kept as its own
+// lightweight query rather than summing GET /admin/brands' per-brand
+// codeCount client-side, since that'd mean fetching all ~150 brands just to
+// read one number.
+router.get("/admin/stats", requireAdmin, async (_req, res): Promise<void> => {
+  const [{ activeCodeCount }] = await db
+    .select({ activeCodeCount: sql<number>`cast(count(*) filter (where ${codesTable.status} = 'active') as int)` })
+    .from(codesTable);
+
+  res.json({ activeCodeCount });
 });
 
 export default router;

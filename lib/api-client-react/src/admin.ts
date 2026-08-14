@@ -296,3 +296,40 @@ export const useRemoveCode = <TError = ErrorType<void>, TContext = unknown>(opti
     ...mutationOptions,
   });
 };
+
+// --- Site-wide admin stats (admin only — currently just how many codes are
+// live in rotation) ---
+
+export interface AdminStats {
+  activeCodeCount: number;
+}
+
+export const getAdminStatsUrl = () => `/api/admin/stats`;
+
+/**
+ * @summary Site-wide admin counts (admin only)
+ */
+export const getAdminStats = async (options?: Parameters<typeof customFetch>[1]): Promise<AdminStats> => {
+  return customFetch<AdminStats>(getAdminStatsUrl(), { ...options, method: 'GET' });
+};
+
+export const getAdminStatsQueryKey = () => [`/api/admin/stats`] as const;
+
+export const getAdminStatsQueryOptions = <TData = AdminStats, TError = ErrorType<unknown>>(options?: {
+  query?: UseQueryOptions<AdminStats, TError, TData>;
+  request?: Parameters<typeof customFetch>[1];
+}) => {
+  const { query: queryOptions, request: requestOptions } = options ?? {};
+  const queryKey = queryOptions?.queryKey ?? getAdminStatsQueryKey();
+  const queryFn: QueryFunction<AdminStats> = ({ signal }) => getAdminStats({ signal, ...requestOptions });
+  return { queryKey, queryFn, ...queryOptions } as UseQueryOptions<AdminStats, TError, TData> & { queryKey: QueryKey };
+};
+
+export const useAdminStats = <TData = AdminStats, TError = ErrorType<unknown>>(options?: {
+  query?: UseQueryOptions<AdminStats, TError, TData>;
+  request?: Parameters<typeof customFetch>[1];
+}): UseQueryResult<TData, TError> & { queryKey: QueryKey } => {
+  const queryOptions = getAdminStatsQueryOptions(options);
+  const query = useQuery(queryOptions) as UseQueryResult<TData, TError> & { queryKey: QueryKey };
+  return { ...query, queryKey: queryOptions.queryKey };
+};
